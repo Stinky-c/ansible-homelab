@@ -1,0 +1,20 @@
+[tools]
+"pipx:ansible-core" = { version = "latest", uvx_args = "--with ansible --with argcomplete" }
+
+[tasks.debupgrade]
+description = "Runs the debian upgrade playbook"
+run = "ansible-playbook playbook/debian.upgrade.yaml"
+
+[tasks.alpupgrade]
+description = "Runs the alpine upgrade playbook"
+run = "ansible-playbook playbook/alpine.upgrade.yaml"
+
+[tasks.playbook]
+description = "Shortcut for running a select playbook"
+run = "ansible-playbook"
+alias = ["p", "play"]
+
+
+[tasks.upgrade]
+depends = ["debupgrade", "alpupgrade"]
+alias = "up"

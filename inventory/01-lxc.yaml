@@ -1,0 +1,61 @@
+proxy:
+  hosts:
+    proxy.host.buckydev.com:
+      ansible_host: 192.168.1.2
+pihole_lxc:
+  hosts:
+    pihole-lxc.host.buckydev.com:
+      ansible_host: 192.168.1.3
+vaultwarden:
+  hosts:
+    vaultwarden.host.buckydev.com:
+      ansible_host: 192.168.1.4
+ntfy:
+  hosts:
+    ntfy.host.buckydev.com:
+      ansible_host: 192.168.1.5
+homepage:
+  hosts:
+    homepage.host.buckydev.com:
+      ansible_host: 192.168.1.6
+quartz:
+  hosts:
+    quartz.host.buckydev.com:
+      ansible_host: 192.168.1.7
+ddns:
+  hosts:
+    ddns.host.buckydev.com:
+      ansible_host: 192.168.1.8
+tailscale:
+  hosts:
+    tailscale.host.buckydev.com:
+      ansible_host: 192.168.1.9
+timescale_ot:
+  hosts:
+    timescale-ot.host.buckydev.com:
+      ansible_host: 192.168.1.10
+grafana_ot:
+  hosts:
+    grafana-ot.host.buckydev.com:
+      ansible_host: 192.168.1.11
+cloudflared:
+  hosts:
+    cloudflared.host.buckydev.com:
+      ansible_host: 192.168.1.12
+shlink:
+  hosts:
+    shlink.host.buckydev.com:
+      ansible_host: 192.168.1.13
+
+debian_lxc:
+  children:
+    proxy:
+    quartz:
+    homepage:
+    pihole_lxc:
+    tailscale:
+    cloudflared:
+    ntfy:
+    timescale_ot:
+    grafana_ot:
+    shlink:

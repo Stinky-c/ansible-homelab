@@ -1,0 +1,6 @@
+- name: Identify
+  hosts: all
+  tasks:
+    - name: Identify
+      ansible.builtin.debug:
+        var: ansible_distribution

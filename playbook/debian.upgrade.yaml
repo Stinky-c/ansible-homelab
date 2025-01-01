@@ -1,0 +1,16 @@
+- name: debian host upgrade
+  hosts: debian
+  tasks:
+    - name: Ping nodes
+      ansible.builtin.ping:
+
+    - name: Apt upgrade
+      ansible.builtin.apt:
+        update_cache: yes
+        upgrade: safe
+        autoclean: yes
+      register: updatedpackages
+
+    - name: Install 'python-is-python3'
+      ansible.builtin.apt:
+        name: "python-is-python3"

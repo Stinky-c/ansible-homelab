@@ -1,0 +1,99 @@
+- name: Docker install
+  hosts: docker
+  vars:
+    deb_architecture:
+      {
+        "armv6l": "armhf",
+        "armv7l": "armhf",
+        "aarch64": "arm64",
+        "x86_64": "amd64",
+        "i386": "i386",
+      }
+  tasks:
+    - name: Ping my hosts
+      ansible.builtin.ping:
+
+    - name: Exit early if not debian
+      ansible.builtin.meta: end_host
+      when:
+        - ansible_lsb.id != 'Debian'
+        - ansible_lsb.major_release != '12'
+
+    - name: Gather Package Facts
+      ansible.builtin.package_facts:
+        manager: apt
+
+    - name: Install Docker Repository
+      when: "'docker-ce' not in ansible_facts.packages"
+      block:
+        - name: Remove old packages just in case
+          ansible.builtin.apt:
+            pkg:
+              - docker.io
+              - docker-doc
+              - docker-compose
+              - podman-docker
+              - containerd
+              - runc
+            state: absent
+            autoclean: yes
+            autoremove: yes
+          # when: "['docker.io','docker-doc','docker-compose','podman-docker','containerd','runc'] in ansible_facts.packages"
+
+        - name: Install docker repo
+          block:
+            - name: Create Keyring
+              ansible.builtin.file:
+                path: /etc/apt/keyrings
+                state: directory
+                mode: "0755"
+                recurse: true
+
+            - name: Download Docker Keyring
+              ansible.builtin.get_url:
+                url: https://download.docker.com/linux/debian/gpg
+                dest: /etc/apt/keyrings/docker.asc
+                mode: 0644
+
+            - name: Add Docker Apt Repository
+              ansible.builtin.apt_repository:
+                repo: deb [arch={{ [ansible_architecture] | map('extract', deb_architecture) | first }} signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/debian {{ ansible_distribution_release }} stable
+                state: present
+                filename: docker
+
+        - name: Add Docker Package
+          ansible.builtin.apt:
+            pkg:
+              - docker-ce
+              - docker-ce-cli
+              - containerd.io
+              - docker-buildx-plugin
+              - docker-compose-plugin
+            update_cache: true
+
+    - name: Check dockge
+      community.docker.docker_container_info:
+        name: dockge
+      register: dockgeinfo
+
+    - name: Install dockge
+      when: "not dockgeinfo.exists"
+      block:
+        - name: Add Stacks directory
+          ansible.builtin.file:
+            path: /opt/stacks
+            state: directory
+
+        - name: Add dockge install directory
+          ansible.builtin.file:
+            path: /opt/dockge
+            state: directory
+
+        - name: Install Dockge Compose File
+          ansible.builtin.copy:
+            src: dockge/docker-compose.yaml
+            dest: /opt/dockge/docker-compose.yaml
+
+        - name: Run dockge
+          community.docker.docker_compose_v2:
+            project_src: /opt/dockge

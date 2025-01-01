@@ -1,0 +1,31 @@
+all:
+  vars:
+    ansible_user: root
+    ansible_ssh_private_key_file: keys/ansiblekey
+
+debian:
+  children:
+    # LXC
+    proxy:
+    quartz:
+    homepage:
+    pihole_lxc:
+    tailscale:
+    cloudflared:
+    ntfy:
+    timescale_ot:
+    grafana_ot:
+    shlink:
+    # VM
+    mchost:
+    dumbdocker:
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
+
+alpine:
+  children:
+    # LXC
+    vaultwarden:
+    ddns:
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
