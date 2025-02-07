@@ -1,0 +1,23 @@
+com2sec readonly  default         {{ snmpd_community }}
+
+group {{ snmpd_group }} v2c        readonly
+view all    included  .1                               80
+access {{ snmpd_group }} ""      any       noauth    exact  all    none   none
+
+syslocation {{ snmpd_loc }}
+syscontact {{ snmpd_contact }}
+
+#OS Distribution Detection
+extend distro /usr/bin/distro
+
+#Hardware Detection
+{% if ansible_architecture == 'x86_64' %}
+# x86_64
+extend manufacturer '/bin/cat /sys/devices/virtual/dmi/id/sys_vendor'
+extend hardware '/bin/cat /sys/devices/virtual/dmi/id/product_name'
+extend serial '/bin/cat /sys/devices/virtual/dmi/id/product_serial'
+{% elif ansible_architecture == 'arm64' %}
+# arm64
+extend hardware '/bin/cat /sys/firmware/devicetree/base/model'
+extend serial '/bin/cat /sys/firmware/devicetree/base/serial-number'
+{% endif %}

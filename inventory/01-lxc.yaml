@@ -51,7 +51,6 @@ debian_lxc:
   children:
     proxy:
     quartz:
-    homepage:
     pihole_lxc:
     tailscale:
     cloudflared:

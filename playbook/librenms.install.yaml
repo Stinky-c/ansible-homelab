@@ -1,0 +1,243 @@
+- name: Librenms Install
+  hosts: librenms
+  vars:
+    TZ: "America/Los_Angeles"
+    librenms_password: Aloha1234!
+    librenms_domain: "librenms.example.com"
+    database_password: Aloha1234!
+    snmpd_community: HELLOWORLD
+    snmpd_contact: "Admin admin@example.com"
+    snmpd_loc: "Neverland"
+    snmpd_group: testgroup
+  tasks:
+    - name: Upgrade Packages
+      ansible.builtin.apt:
+        upgrade: safe
+        update_cache: yes
+
+    - name: Install Packages
+      ansible.builtin.apt:
+        update_cache: yes
+        autoclean: yes
+        name: "{{ lookup('file','files/librenms/packages.txt').splitlines()}}"
+
+    - name: Add Librenms User
+      ansible.builtin.user:
+        name: librenms
+        home: /opt/librenms
+        create_home: false
+        system: true
+        shell: "/usr/bin/bash"
+
+    - name: Add www-data to Group librenms # is this secure?
+      ansible.builtin.user:
+        name: "www-data"
+        groups: "librenms"
+        append: true
+
+    - name: Trust Cloned Directory
+      community.general.git_config:
+        name: safe.directory
+        value: /opt/librenms
+        scope: global
+
+    - name: Clone Git
+      ansible.builtin.git:
+        repo: "https://github.com/librenms/librenms.git"
+        dest: "/opt/librenms"
+      register: repo_clone
+      failed_when:
+        - repo_clone.failed
+        - 'not "Local modifications exist" in repo_clone.msg'
+
+    - name: Update Owner
+      ansible.builtin.file:
+        path: "/opt/librenms"
+        owner: librenms
+        group: librenms
+        recurse: true
+        mode: "0771"
+
+    - name: Update ACL
+      ansible.posix.acl:
+        path: "{{ item }}"
+        etype: "group"
+        permissions: "rwx"
+        default: true
+        recursive: true
+        state: present
+      loop:
+        - /opt/librenms/rrd
+        - /opt/librenms/logs
+        - /opt/librenms/storage
+        - /opt/librenms/bootstrap/cache
+
+    - name: Install Dependencies as User
+      ansible.builtin.shell: ./scripts/composer_wrapper.php install --no-dev && echo $(date) > .install_deps
+      args:
+        chdir: /opt/librenms
+        creates: /opt/librenms/.install_deps
+      become: true
+      become_user: librenms
+
+    - name: Update php Timezone
+      ansible.builtin.replace:
+        path: "{{ item }}"
+        after: '\[Date\]'
+        before: '\[filter\]'
+        regexp: "^;date.timezone.*$"
+        replace: "date.timezone = {{ TZ }}"
+      loop: # TODO: dont hard code
+        - /etc/php/8.3/fpm/php.ini
+        - /etc/php/8.3/cli/php.ini
+
+    - name: Update system timezone
+      community.general.timezone:
+        name: "{{ TZ }}"
+
+    - name: Update Database Config
+      ansible.builtin.copy:
+        src: librenms/db.conf
+        dest: /etc/mysql/mariadb.conf.d/50-server.cnf
+        force: true
+      register: db_conf
+
+    - name: Restart Database
+      ansible.builtin.service:
+        name: mariadb
+        state: restarted
+        enabled: true
+      when: db_conf.changed
+
+    - name: Create table
+      community.mysql.mysql_db:
+        login_user: root
+        login_unix_socket: /var/run/mysqld/mysqld.sock
+        name: librenms
+        collation: utf8mb4_unicode_ci
+        encoding: utf8mb4
+
+    - name: Create db User
+      community.mysql.mysql_user:
+        login_user: root
+        login_unix_socket: /var/run/mysqld/mysqld.sock
+        name: librenms
+        password: "{{ librenms_password }}"
+        priv: "librenms.*:ALL"
+
+    - name: Copy php-fpm Config
+      ansible.builtin.copy:
+        src: librenms/php-librenms.conf
+        dest: /etc/php/8.3/fpm/pool.d/librenms.conf
+        force: true
+      register: fpm_conf
+
+    - name: Copy Nginx Config
+      ansible.builtin.template:
+        src: files/librenms/nginx-librenms.conf.j2
+        dest: /etc/nginx/conf.d/librenms.conf
+      register: nginx_conf
+
+    - name: Copy rrdcached Config
+      ansible.builtin.template:
+        src: files/librenms/rrdcache.conf.j2
+        dest: /etc/default/rrdcached
+      register: rrdcached_conf
+
+    - name: Fix rrdcached Permissions
+      ansible.builtin.file:
+        path: "/var/lib/rrdcached/journal/"
+        owner: librenms
+        group: librenms
+
+    - name: Remove Extra Webserver Config
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - /etc/nginx/sites-enabled/default
+        - /etc/nginx/sites-available/default
+        - /etc/php/8.3/fpm/pool.d/www.conf
+
+    - name: Restart Nginx
+      ansible.builtin.service:
+        name: nginx
+        state: restarted
+        enabled: true
+      when: nginx_conf.changed
+
+    - name: Restart php-fpm
+      ansible.builtin.service:
+        name: php8.3-fpm
+        state: restarted
+        enabled: true
+      when: fpm_conf.changed
+
+    - name: Restart rrdcached
+      ansible.builtin.service:
+        name: rrdcached
+        enabled: true
+        state: restarted
+      when: rrdcached_conf.changed
+
+    - name: Install lnms Command
+      ansible.builtin.file:
+        dest: /usr/bin/lnms
+        src: /opt/librenms/lnms
+        mode: "0755"
+        state: link
+
+    - name: Install lnms Command Completion
+      ansible.builtin.copy:
+        dest: /etc/bash_completion.d/
+        src: /opt/librenms/misc/lnms-completion.bash
+        remote_src: true
+
+    - name: Install snmpd conf
+      ansible.builtin.template:
+        dest: /etc/snmp/snmpd.conf
+        # src does not prepend `files/`
+        src: files/librenms/snmpd.conf.j2
+      register: snmpd_conf
+
+    - name: Install snmpd distro command
+      ansible.builtin.get_url:
+        url: https://raw.githubusercontent.com/librenms/librenms-agent/master/snmp/distro
+        dest: /usr/bin/distro
+        mode: "755"
+      register: distro_exec
+
+    - name: Restart snmpd
+      ansible.builtin.service:
+        name: snmpd
+        state: "restarted"
+        enabled: true
+      when: snmpd_conf.changed or distro_exec.changed
+
+    - name: Copy cronjobs
+      ansible.builtin.copy:
+        src: /opt/librenms/dist/librenms.cron
+        dest: /etc/cron.d/librenms
+        remote_src: true
+
+    - name: Copy Scheduler
+      ansible.builtin.copy:
+        src: "{{ item }}"
+        dest: /etc/systemd/system/
+        remote_src: true
+      loop:
+        - /opt/librenms/dist/librenms-scheduler.service
+        - /opt/librenms/dist/librenms-scheduler.timer
+      register: scheduler_service
+
+    - name: Start Scheduler
+      ansible.builtin.service:
+        name: librenms-scheduler.timer
+        state: "started"
+        enabled: true
+
+    - name: Copy logrotate
+      ansible.builtin.copy:
+        src: /opt/librenms/misc/librenms.logrotate
+        dest: /etc/logrotate.d/librenms
+        remote_src: true

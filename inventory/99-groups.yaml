@@ -22,6 +22,12 @@ debian:
   vars:
     ansible_python_interpreter: /usr/bin/python3
 
+ubuntu:
+  children:
+    librenms:
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
+
 alpine:
   children:
     # LXC

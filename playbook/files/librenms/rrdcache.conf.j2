@@ -1,0 +1,12 @@
+BASE_OPTIONS="-B -F -R"
+BASE_PATH=/opt/librenms/rrd/
+DAEMON_GROUP=librenms
+DAEMON_USER=librenms
+DAEMON=/usr/bin/rrdcached
+JOURNAL_PATH=/var/lib/rrdcached/journal/
+PIDFILE=/run/rrdcached.pid
+SOCKFILE=/run/rrdcached.sock
+SOCKGROUP=librenms
+WRITE_JITTER=1800
+WRITE_THREADS=4
+WRITE_TIMEOUT=1800
