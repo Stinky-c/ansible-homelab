@@ -1,0 +1,6 @@
+- name: Debian-family System Upgrade
+  ansible.builtin.apt:
+    upgrade: "{{debian_upgrade}}"
+    autoclean: "{{debian_autoclean}}"
+    autoremove: "{{debian_autoremove}}"
+    update_cache: "{{debian_update_cache}}"

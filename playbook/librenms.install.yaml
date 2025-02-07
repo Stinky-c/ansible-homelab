@@ -1,5 +1,7 @@
 - name: Librenms Install
   hosts: librenms
+  roles:
+    - sysupgrade
   vars:
     TZ: "America/Los_Angeles"
     librenms_password: Aloha1234!
@@ -10,11 +12,6 @@
     snmpd_loc: "Neverland"
     snmpd_group: testgroup
   tasks:
-    - name: Upgrade Packages
-      ansible.builtin.apt:
-        upgrade: safe
-        update_cache: yes
-
     - name: Install Packages
       ansible.builtin.apt:
         update_cache: yes
@@ -123,6 +120,7 @@
         login_unix_socket: /var/run/mysqld/mysqld.sock
         name: librenms
         password: "{{ librenms_password }}"
+        column_case_sensitive: true
         priv: "librenms.*:ALL"
 
     - name: Copy php-fpm Config

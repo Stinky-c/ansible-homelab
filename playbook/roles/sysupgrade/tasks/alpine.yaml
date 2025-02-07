@@ -1,0 +1,5 @@
+- name: Alpine-family System Upgrade
+  community.general.apk:
+    update_cache: true
+    upgrade: true
+    available: true
