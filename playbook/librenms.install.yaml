@@ -2,15 +2,17 @@
   hosts: librenms
   roles:
     - sysupgrade
-  vars:
-    TZ: "America/Los_Angeles"
-    librenms_password: Aloha1234!
-    librenms_domain: "librenms.example.com"
-    database_password: Aloha1234!
-    snmpd_community: HELLOWORLD
-    snmpd_contact: "Admin admin@example.com"
-    snmpd_loc: "Neverland"
-    snmpd_group: testgroup
+  # example_vars:
+  #   TZ: "America/Los_Angeles" # Any timezone for use in php or system config
+  #   librenms_password: Aloha1234! # Admin user password
+  #   librenms_email: "admin@example.com" # Admin user email
+  #   librenms_domain: "librenms.example.com" # domain exluding protocol for defining APP_URL
+  #   librenms_domain_proto: "http" # Either 'http' or 'https'
+  #   database_password: Aloha1234! # database password for user 'librenms'
+  #   snmpd_community: HELLOWORLD # snmpd community string
+  #   snmpd_contact: "Admin admin@example.com" # snmpd contact
+  #   snmpd_loc: "Neverland" # snmpd location
+  #   snmpd_group: testgroup # snmpd group
   tasks:
     - name: Install Packages
       ansible.builtin.apt:
@@ -26,11 +28,15 @@
         system: true
         shell: "/usr/bin/bash"
 
-    - name: Add www-data to Group librenms # is this secure?
+    - name: Add www-data to Group librenms
       ansible.builtin.user:
         name: "www-data"
         groups: "librenms"
         append: true
+
+    - name: Update system timezone
+      community.general.timezone:
+        name: "{{ TZ }}"
 
     - name: Trust Cloned Directory
       community.general.git_config:
@@ -88,10 +94,6 @@
         - /etc/php/8.3/fpm/php.ini
         - /etc/php/8.3/cli/php.ini
 
-    - name: Update system timezone
-      community.general.timezone:
-        name: "{{ TZ }}"
-
     - name: Update Database Config
       ansible.builtin.copy:
         src: librenms/db.conf
@@ -119,9 +121,26 @@
         login_user: root
         login_unix_socket: /var/run/mysqld/mysqld.sock
         name: librenms
-        password: "{{ librenms_password }}"
+        password: "{{ database_password }}"
         column_case_sensitive: true
         priv: "librenms.*:ALL"
+
+    - name: Copy preseed config
+      ansible.builtin.template:
+        src: files/librenms/preseed.yaml.j2
+        dest: /opt/librenms/database/seeders/config/preeseed.yaml
+
+    - name: Test env
+      ansible.builtin.shell: cat /opt/librenms/.env
+      register: env_conf
+      check_mode: false # Always run
+
+    - name: Copy env
+      ansible.builtin.template:
+        src: files/librenms/env.j2
+        dest: /opt/librenms/.env
+        force: true
+      when: "env_conf.rc != 0 or '__COMMENT' not in env_conf.stdout"
 
     - name: Copy php-fpm Config
       ansible.builtin.copy:
@@ -194,7 +213,6 @@
     - name: Install snmpd conf
       ansible.builtin.template:
         dest: /etc/snmp/snmpd.conf
-        # src does not prepend `files/`
         src: files/librenms/snmpd.conf.j2
       register: snmpd_conf
 
@@ -202,7 +220,7 @@
       ansible.builtin.get_url:
         url: https://raw.githubusercontent.com/librenms/librenms-agent/master/snmp/distro
         dest: /usr/bin/distro
-        mode: "755"
+        mode: "0755"
       register: distro_exec
 
     - name: Restart snmpd
@@ -239,3 +257,57 @@
         src: /opt/librenms/misc/librenms.logrotate
         dest: /etc/logrotate.d/librenms
         remote_src: true
+
+    - name: Complete install
+      become: true
+      become_user: librenms
+      block:
+        - name: Generate App Key
+          ansible.builtin.shell:
+            cmd: "/opt/librenms/lnms key:generate --no-interaction --force && echo $(date) > /opt/librenms/.refreshed_key"
+            chdir: /opt/librenms/
+            creates: "/opt/librenms/.refreshed_key"
+            executable: /bin/bash
+
+        - name: Generate VAPID keys
+          ansible.builtin.shell:
+            cmd: "/opt/librenms/lnms webpush:vapid --no-interaction --force && echo $(date) > /opt/librenms/.refreshed_vapid"
+            chdir: /opt/librenms/
+            creates: "/opt/librenms/.refreshed_vapid"
+            executable: /bin/bash
+
+        - name: Apply Database Migrations
+          ansible.builtin.shell:
+            cmd: "/opt/librenms/lnms migrate --no-interaction --force && echo $(date) > /opt/librenms/.migrated_db"
+            chdir: /opt/librenms/
+            creates: "/opt/librenms/.migrated_db"
+            executable: /bin/bash
+
+        - name: Seed Database
+          ansible.builtin.shell:
+            cmd: "/opt/librenms/lnms db:seed --no-interaction --force && echo $(date) > /opt/librenms/.seeded_db"
+            chdir: /opt/librenms/
+            creates: "/opt/librenms/.seeded_db"
+            executable: /bin/bash
+
+        # Passes password via command line, this seems insecure
+        - name: Add Admin User
+          ansible.builtin.shell:
+            cmd: "/opt/librenms/lnms user:add admin --no-interaction --role=admin --email={{librenms_email|quote}} --password={{ librenms_password|quote }} && echo $(date) > /opt/librenms/.created_admin"
+            # stdin: "{{ librenms_password }}"
+            chdir: /opt/librenms/
+            creates: "/opt/librenms/.created_admin"
+            executable: /bin/bash
+
+        - name: Add localhost device
+          ansible.builtin.shell:
+            cmd: "/opt/librenms/lnms device:add --no-interaction --force --v2c --community={{ snmpd_community|quote }} localhost && echo $(date) > /opt/librenms/.added_localhost"
+            chdir: /opt/librenms/
+            creates: "/opt/librenms/.added_localhost"
+            executable: /bin/bash
+
+        - name: Cache Config
+          ansible.builtin.shell:
+            cmd: "/opt/librenms/lnms config:cache --no-interaction"
+            chdir: /opt/librenms/
+            executable: /bin/bash

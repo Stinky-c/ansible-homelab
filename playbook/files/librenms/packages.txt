@@ -36,3 +36,7 @@ python3-pip
 whois
 traceroute
 rrdcached
+vim
+file
+cron
+qemu-guest-agent

@@ -11,8 +11,7 @@ mchost:
 librenms:
   hosts:
     librenms.host.buckydev.com:
-      # ansible_host: 192.168.1.131
-      ansible_host: 192.168.0.177
+      ansible_host: 192.168.1.131
 
 all:
   vars:

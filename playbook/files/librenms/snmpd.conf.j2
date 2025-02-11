@@ -15,9 +15,9 @@ extend distro /usr/bin/distro
 # x86_64
 extend manufacturer '/bin/cat /sys/devices/virtual/dmi/id/sys_vendor'
 extend hardware '/bin/cat /sys/devices/virtual/dmi/id/product_name'
-extend serial '/bin/cat /sys/devices/virtual/dmi/id/product_serial'
+# extend serial '/bin/cat /sys/devices/virtual/dmi/id/product_serial'
 {% elif ansible_architecture == 'arm64' %}
 # arm64
 extend hardware '/bin/cat /sys/firmware/devicetree/base/model'
-extend serial '/bin/cat /sys/firmware/devicetree/base/serial-number'
+# extend serial '/bin/cat /sys/firmware/devicetree/base/serial-number'
 {% endif %}
