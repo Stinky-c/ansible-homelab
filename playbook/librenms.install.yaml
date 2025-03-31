@@ -1,9 +1,10 @@
+---
 - name: Librenms Install
   hosts: librenms
   roles:
     - sysupgrade
   # example_vars:
-  #   TZ: "America/Los_Angeles" # Any timezone for use in php or system config
+  #   tz: "America/Los_Angeles" # Any timezone for use in php or system config
   #   librenms_password: Aloha1234! # Admin user password
   #   librenms_email: "admin@example.com" # Admin user email
   #   librenms_domain: "librenms.example.com" # domain exluding protocol for defining APP_URL
@@ -16,9 +17,9 @@
   tasks:
     - name: Install Packages
       ansible.builtin.apt:
-        update_cache: yes
-        autoclean: yes
-        name: "{{ lookup('file','files/librenms/packages.txt').splitlines()}}"
+        update_cache: true
+        autoclean: true
+        name: "{{ lookup('file', 'files/librenms/packages.txt').splitlines() }}"
 
     - name: Add Librenms User
       ansible.builtin.user:
@@ -36,7 +37,7 @@
 
     - name: Update system timezone
       community.general.timezone:
-        name: "{{ TZ }}"
+        name: "{{ tz }}"
 
     - name: Trust Cloned Directory
       community.general.git_config:
@@ -86,10 +87,10 @@
     - name: Update php Timezone
       ansible.builtin.replace:
         path: "{{ item }}"
-        after: '\[Date\]'
-        before: '\[filter\]'
+        after: "\\[Date\\]"
+        before: "\\[filter\\]"
         regexp: "^;date.timezone.*$"
-        replace: "date.timezone = {{ TZ }}"
+        replace: "date.timezone = {{ tz }}"
       loop: # TODO: dont hard code
         - /etc/php/8.3/fpm/php.ini
         - /etc/php/8.3/cli/php.ini
@@ -100,13 +101,8 @@
         dest: /etc/mysql/mariadb.conf.d/50-server.cnf
         force: true
       register: db_conf
-
-    - name: Restart Database
-      ansible.builtin.service:
-        name: mariadb
-        state: restarted
-        enabled: true
-      when: db_conf.changed
+      notify:
+        - Restart Database
 
     - name: Create table
       community.mysql.mysql_db:
@@ -131,7 +127,7 @@
         dest: /opt/librenms/database/seeders/config/preeseed.yaml
 
     - name: Test env
-      ansible.builtin.shell: cat /opt/librenms/.env
+      ansible.builtin.command: cat /opt/librenms/.env
       register: env_conf
       check_mode: false # Always run
 
@@ -147,19 +143,23 @@
         src: librenms/php-librenms.conf
         dest: /etc/php/8.3/fpm/pool.d/librenms.conf
         force: true
-      register: fpm_conf
+      notify:
+        - Restart php-fpm
 
     - name: Copy Nginx Config
       ansible.builtin.template:
         src: files/librenms/nginx-librenms.conf.j2
         dest: /etc/nginx/conf.d/librenms.conf
-      register: nginx_conf
+      notify:
+        - Restart Nginx
 
     - name: Copy rrdcached Config
       ansible.builtin.template:
         src: files/librenms/rrdcache.conf.j2
         dest: /etc/default/rrdcached
       register: rrdcached_conf
+      notify:
+        - Restart rddcached
 
     - name: Fix rrdcached Permissions
       ansible.builtin.file:
@@ -175,27 +175,6 @@
         - /etc/nginx/sites-enabled/default
         - /etc/nginx/sites-available/default
         - /etc/php/8.3/fpm/pool.d/www.conf
-
-    - name: Restart Nginx
-      ansible.builtin.service:
-        name: nginx
-        state: restarted
-        enabled: true
-      when: nginx_conf.changed
-
-    - name: Restart php-fpm
-      ansible.builtin.service:
-        name: php8.3-fpm
-        state: restarted
-        enabled: true
-      when: fpm_conf.changed
-
-    - name: Restart rrdcached
-      ansible.builtin.service:
-        name: rrdcached
-        enabled: true
-        state: restarted
-      when: rrdcached_conf.changed
 
     - name: Install lnms Command
       ansible.builtin.file:
@@ -214,21 +193,16 @@
       ansible.builtin.template:
         dest: /etc/snmp/snmpd.conf
         src: files/librenms/snmpd.conf.j2
-      register: snmpd_conf
+      notify:
+        - Restart snmpd
 
     - name: Install snmpd distro command
       ansible.builtin.get_url:
         url: https://raw.githubusercontent.com/librenms/librenms-agent/master/snmp/distro
         dest: /usr/bin/distro
         mode: "0755"
-      register: distro_exec
-
-    - name: Restart snmpd
-      ansible.builtin.service:
-        name: snmpd
-        state: "restarted"
-        enabled: true
-      when: snmpd_conf.changed or distro_exec.changed
+      notify:
+        - Restart snmpd
 
     - name: Copy cronjobs
       ansible.builtin.copy:
@@ -293,7 +267,9 @@
         # Passes password via command line, this seems insecure
         - name: Add Admin User
           ansible.builtin.shell:
-            cmd: "/opt/librenms/lnms user:add admin --no-interaction --role=admin --email={{librenms_email|quote}} --password={{ librenms_password|quote }} && echo $(date) > /opt/librenms/.created_admin"
+            cmd:
+              "/opt/librenms/lnms user:add admin --no-interaction --role=admin --email={{ librenms_email | quote }} --password={{ librenms_password | quote }}
+              && echo $(date) > /opt/librenms/.created_admin"
             # stdin: "{{ librenms_password }}"
             chdir: /opt/librenms/
             creates: "/opt/librenms/.created_admin"
@@ -301,7 +277,7 @@
 
         - name: Add localhost device
           ansible.builtin.shell:
-            cmd: "/opt/librenms/lnms device:add --no-interaction --force --v2c --community={{ snmpd_community|quote }} localhost && echo $(date) > /opt/librenms/.added_localhost"
+            cmd: "/opt/librenms/lnms device:add --no-interaction --force --v2c --community={{ snmpd_community | quote }} localhost && echo $(date) > /opt/librenms/.added_localhost"
             chdir: /opt/librenms/
             creates: "/opt/librenms/.added_localhost"
             executable: /bin/bash
@@ -311,3 +287,33 @@
             cmd: "/opt/librenms/lnms config:cache --no-interaction"
             chdir: /opt/librenms/
             executable: /bin/bash
+  handlers:
+    - name: Restart Database
+      ansible.builtin.service:
+        name: mariadb
+        state: restarted
+        enabled: true
+
+    - name: Restart Nginx
+      ansible.builtin.service:
+        name: nginx
+        state: restarted
+        enabled: true
+
+    - name: Restart php-fpm
+      ansible.builtin.service:
+        name: php8.3-fpm
+        state: restarted
+        enabled: true
+
+    - name: Restart rrdcached
+      ansible.builtin.service:
+        name: rrdcached
+        enabled: true
+        state: restarted
+
+    - name: Restart snmpd
+      ansible.builtin.service:
+        name: snmpd
+        state: "restarted"
+        enabled: true

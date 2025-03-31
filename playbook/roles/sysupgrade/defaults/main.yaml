@@ -1,4 +1,5 @@
-debian_autoclean: false
-debian_autoremove: true
-debian_update_cache: true
-debian_upgrade: "safe" #https://docs.ansible.com/ansible/latest/collections/ansible/builtin/apt_module.html#parameter-upgrade
+---
+sysupgrade_debian_autoclean: false
+sysupgrade_debian_autoremove: true
+sysupgrade_debian_update_cache: true
+sysupgrade_debian_upgrade: "safe" # https://docs.ansible.com/ansible/latest/collections/ansible/builtin/apt_module.html#parameter-upgrade

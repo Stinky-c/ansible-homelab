@@ -1,7 +1,8 @@
+---
 - name: Alpine-family System Upgrade
-  import_tasks: alpine.yaml
+  ansible.builtin.import_tasks: alpine.yaml
   when: ansible_facts['os_family']|lower == 'alpine'
 
 - name: Debian-family System Upgrade
-  import_tasks: debian.yaml
+  ansible.builtin.import_tasks: debian.yaml
   when: ansible_facts['os_family']|lower == 'debian'

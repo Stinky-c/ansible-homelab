@@ -1,5 +1,6 @@
 [tools]
 "pipx:ansible-core" = { version = "latest", uvx_args = "--with ansible --with argcomplete" }
+"pipx:ansible-lint" = "latest"
 
 [tasks.debupgrade]
 description = "Runs the debian upgrade playbook"

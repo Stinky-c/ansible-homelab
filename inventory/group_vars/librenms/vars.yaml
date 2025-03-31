@@ -1,4 +1,5 @@
-TZ: "{{ vault_TZ }}"
+---
+tz: "{{ vault_tz }}"
 librenms_password: "{{ vault_librenms_password }}"
 librenms_email: "{{ vault_librenms_email }}"
 librenms_domain: "{{ vault_librenms_domain }}"

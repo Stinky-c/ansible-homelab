@@ -1,3 +1,4 @@
+---
 - name: Identify
   hosts: all
   tasks:
