@@ -15,10 +15,6 @@ ntfy:
   hosts:
     ntfy.host.buckydev.com:
       ansible_host: 192.168.1.5
-homepage:
-  hosts:
-    homepage.host.buckydev.com:
-      ansible_host: 192.168.1.6
 quartz:
   hosts:
     quartz.host.buckydev.com:
@@ -47,15 +43,3 @@ shlink:
   hosts:
     shlink.host.buckydev.com:
       ansible_host: 192.168.1.13
-
-debian_lxc:
-  children:
-    proxy:
-    quartz:
-    pihole_lxc:
-    tailscale:
-    cloudflared:
-    ntfy:
-    timescale_ot:
-    grafana_ot:
-    shlink:

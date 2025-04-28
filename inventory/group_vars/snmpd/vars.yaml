@@ -1,0 +1,5 @@
+---
+snmpd_community: "{{ vault_snmpd_community }}"
+snmpd_contact: "{{ vault_snmpd_contact }}"
+snmpd_loc: "{{ vault_snmpd_loc }}"
+snmpd_group: "{{ vault_snmpd_group }}"

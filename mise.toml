@@ -1,21 +1,21 @@
+[env]
+EDITOR = "code --wait"
+
 [tools]
-"pipx:ansible-core" = { version = "latest", uvx_args = "--with ansible --with argcomplete" }
+"pipx:ansible-core" = { version = "latest", uvx_args = "--with ansible" }
 "pipx:ansible-lint" = "latest"
 
-[tasks.debupgrade]
-description = "Runs the debian upgrade playbook"
-run = "ansible-playbook playbook/debian.upgrade.yaml"
+[tasks.host-vars]
+alias = "vars"
+description = "Lists all host vars"
+run = "ansible -m debug -a var=hostvars[inventory_hostname] --vault-password-file pass/*"
 
-[tasks.alpupgrade]
-description = "Runs the alpine upgrade playbook"
-run = "ansible-playbook playbook/alpine.upgrade.yaml"
 
 [tasks.playbook]
 description = "Shortcut for running a select playbook"
-run = "ansible-playbook"
+run = "ansible-playbook --vault-password-file pass/*"
 alias = ["p", "play"]
 
-
-[tasks.upgrade]
-depends = ["debupgrade", "alpupgrade"]
-alias = "up"
+[tasks.edit]
+description = "Edits a vault using VSCode"
+run = "ansible-vault edit {{arg(name='file')}}"

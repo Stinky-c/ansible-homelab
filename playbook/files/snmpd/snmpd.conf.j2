@@ -21,3 +21,7 @@ extend hardware '/bin/cat /sys/devices/virtual/dmi/id/product_name'
 extend hardware '/bin/cat /sys/firmware/devicetree/base/model'
 # extend serial '/bin/cat /sys/firmware/devicetree/base/serial-number'
 {% endif %}
+
+{% if 'zfs-dkms' in ansible_facts.packages %}
+extend zfs /etc/snmp/zfs -b
+{%endif%}

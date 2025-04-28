@@ -1,0 +1,51 @@
+---
+- name: Snmpd Install
+  hosts: snmpd
+  tasks:
+    - name: Gather package facts
+      ansible.builtin.package_facts:
+        manager: apt
+
+    - name: Install snmpd package
+      ansible.builtin.apt:
+        update_cache: true
+        name: snmpd
+
+    - name: Install snmpd distro command
+      ansible.builtin.get_url:
+        url: https://github.com/librenms/librenms-agent/raw/master/snmp/distro
+        dest: /usr/bin/distro
+        mode: "0755"
+
+    - name: ZFS Check
+      when: "'zfs-dkms' in ansible_facts.packages"
+      block:
+        - name: Install ZFS command
+          ansible.builtin.get_url:
+            url: https://github.com/librenms/librenms-agent/raw/master/snmp/zfs
+            dest: /etc/snmp/zfs
+            mode: "0755"
+          register: install_zfs
+
+        - name: Install ZFS command packages
+          ansible.builtin.apt:
+            update_cache: true
+            pkg:
+              - libjson-perl
+              - libmime-base64-perl
+              - libfile-slurp-perl
+
+    - name: Install snmpd conf
+      ansible.builtin.template:
+        dest: /etc/snmp/snmpd.conf
+        src: files/snmpd/snmpd.conf.j2
+        mode: "0664"
+      notify:
+        - Restart snmpd
+
+  handlers:
+    - name: Restart snmpd
+      ansible.builtin.service:
+        name: snmpd
+        state: "restarted"
+        enabled: true

@@ -5,3 +5,8 @@
     - name: Identify
       ansible.builtin.debug:
         var: ansible_distribution
+    - name: Install python-is-python3
+      ansible.builtin.apt:
+        update_cache: true
+        pkg: python-is-python3
+      when: ansible_facts['os_family'] | lower == 'debian'

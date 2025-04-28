@@ -1,28 +1,25 @@
 ---
-dumbdocker:
-  hosts:
-    dumbdocker.host.buckydev.com:
-      ansible_host: 192.168.1.134
-
 mchost:
   hosts:
     mchost.host.buckydev.com:
       ansible_host: 192.168.1.128
+
+nas:
+  hosts:
+    nas.host.buckydev.com:
+      ansible_host: 192.168.1.129
 
 librenms:
   hosts:
     librenms.host.buckydev.com:
       ansible_host: 192.168.1.131
 
-all:
-  vars:
-    ansible_user: root
-    ansible_ssh_private_key_file: keys/ansiblekey
+dev2:
+  hosts:
+    dev2.host.buckydev.com:
+      ansible_host: 192.168.1.132
 
-docker:
-  children:
-    dumbdocker:
-debian_vm:
-  children:
-    mchost:
-    dumbdocker:
+dumbdocker:
+  hosts:
+    dumbdocker.host.buckydev.com:
+      ansible_host: 192.168.1.134

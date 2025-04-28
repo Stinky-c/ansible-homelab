@@ -1,9 +1,4 @@
 ---
-all:
-  vars:
-    ansible_user: root
-    ansible_ssh_private_key_file: keys/ansiblekey
-
 debian:
   children:
     # LXC
@@ -34,5 +29,21 @@ alpine:
     # LXC
     vaultwarden:
     ddns:
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
+
+snmpd:
+  children:
+    librenms:
+    mchost:
+    dumbdocker:
+    nas:
+    dev2:
+
+docker:
+  children:
+    dumbdocker:
+
+all:
   vars:
     ansible_python_interpreter: /usr/bin/python3

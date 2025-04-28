@@ -1,4 +1,5 @@
 ---
+# Ubuntu 24.04
 - name: Librenms Install
   hosts: librenms
   roles:
@@ -100,6 +101,7 @@
         src: librenms/db.conf
         dest: /etc/mysql/mariadb.conf.d/50-server.cnf
         force: true
+        mode: "0664"
       register: db_conf
       notify:
         - Restart Database
@@ -125,6 +127,7 @@
       ansible.builtin.template:
         src: files/librenms/preseed.yaml.j2
         dest: /opt/librenms/database/seeders/config/preeseed.yaml
+        mode: "0664"
 
     - name: Test env
       ansible.builtin.command: cat /opt/librenms/.env
@@ -136,6 +139,7 @@
         src: files/librenms/env.j2
         dest: /opt/librenms/.env
         force: true
+        mode: "0664"
       when: "env_conf.rc != 0 or '__COMMENT' not in env_conf.stdout"
 
     - name: Copy php-fpm Config
@@ -143,6 +147,7 @@
         src: librenms/php-librenms.conf
         dest: /etc/php/8.3/fpm/pool.d/librenms.conf
         force: true
+        mode: "0664"
       notify:
         - Restart php-fpm
 
@@ -150,6 +155,7 @@
       ansible.builtin.template:
         src: files/librenms/nginx-librenms.conf.j2
         dest: /etc/nginx/conf.d/librenms.conf
+        mode: "0664"
       notify:
         - Restart Nginx
 
@@ -157,9 +163,10 @@
       ansible.builtin.template:
         src: files/librenms/rrdcache.conf.j2
         dest: /etc/default/rrdcached
+        mode: "0664"
       register: rrdcached_conf
       notify:
-        - Restart rddcached
+        - Restart rrdcached
 
     - name: Fix rrdcached Permissions
       ansible.builtin.file:
@@ -188,11 +195,13 @@
         dest: /etc/bash_completion.d/
         src: /opt/librenms/misc/lnms-completion.bash
         remote_src: true
+        mode: "0664"
 
     - name: Install snmpd conf
       ansible.builtin.template:
         dest: /etc/snmp/snmpd.conf
-        src: files/librenms/snmpd.conf.j2
+        src: files/snmpd/snmpd.conf.j2
+        mode: "0664"
       notify:
         - Restart snmpd
 
@@ -209,12 +218,14 @@
         src: /opt/librenms/dist/librenms.cron
         dest: /etc/cron.d/librenms
         remote_src: true
+        mode: "0664"
 
     - name: Copy Scheduler
       ansible.builtin.copy:
         src: "{{ item }}"
         dest: /etc/systemd/system/
         remote_src: true
+        mode: "0664"
       loop:
         - /opt/librenms/dist/librenms-scheduler.service
         - /opt/librenms/dist/librenms-scheduler.timer
@@ -231,6 +242,7 @@
         src: /opt/librenms/misc/librenms.logrotate
         dest: /etc/logrotate.d/librenms
         remote_src: true
+        mode: "0664"
 
     - name: Complete install
       become: true
