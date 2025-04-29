@@ -1,0 +1,13 @@
+[Unit]
+Description=Karakeep headless browser
+After=network.target
+
+[Service]
+User=root
+Restart=on-failure
+ExecStart=/usr/bin/chromium --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --remote-debugging-address=127.0.0.1 --remote-debugging-port=9222 --hide-scrollbars
+TimeoutStopSec=5
+SyslogIdentifier=karakeep-browser
+
+[Install]
+WantedBy=multi-user.target

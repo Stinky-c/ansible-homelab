@@ -1,0 +1,7 @@
+[Unit]
+Description=Karakeep Services
+After=network-online.target
+Wants=meilisearch.service karakeep-browser.service karakeep-workers.service karakeep-web.service
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,19 @@
+[Unit]
+Description=Karakeep workers
+Wants=network.target karakeep-browser.service meilisearch.service
+After=network.target karakeep-browser.service meilisearch.service
+
+[Service]
+User=karakeep
+Group=karakeep
+Restart=always
+EnvironmentFile={{ karakeep_env }}
+WorkingDirectory={{karakeep_install}}/apps/workers
+ExecStart=/usr/bin/pnpm run start:prod
+StandardOutput=file:{{karakeep_log}}/karakeep-workers.log
+StandardError=file:{{karakeep_log}}/karakeep-workers.log
+TimeoutStopSec=5
+SyslogIdentifier=karakeep-workers
+
+[Install]
+WantedBy=multi-user.target

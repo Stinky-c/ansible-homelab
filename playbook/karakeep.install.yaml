@@ -1,0 +1,312 @@
+# Debian 12
+---
+- name: Karakeep Install
+  hosts: karakeep
+  # TODO:
+  # Cronjob to auto update yt-dlp
+  vars:
+    # Apt/binary locations
+    ytdlp_loc: "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_linux"
+    monolith_loc: "https://github.com/Y2Z/monolith/releases/latest/download/monolith-gnu-linux-x86_64"
+    meilisearch_deb: "https://github.com/meilisearch/meilisearch/releases/latest/download/meilisearch.deb"
+    nodesource_key: "https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key"
+    # dont hardcode node version
+    nodesource_repo: "https://deb.nodesource.com/node_22.x"
+    # Data Locations
+    meilisearch_conf: "/etc/meilisearch.toml"
+    meilisearch_data: "/var/lib/meilisearch"
+    karakeep_data: "/var/lib/karakeep"
+    karakeep_conf: "/etc/karakeep"
+    karakeep_install: "/opt/karakeep"
+    karakeep_log: "/var/log/karakeep"
+    karakeep_env: "{{ karakeep_conf }}/karakeep.env"
+
+    # TODO: define karakeep_version
+  tasks:
+    - name: Install gnupg
+      ansible.builtin.apt:
+        name: gnupg
+
+    - name: Find Karakeep version
+      block:
+        - name: "Version: API"
+          check_mode: false
+          ansible.builtin.uri:
+            url: https://api.github.com/repos/karakeep-app/karakeep/releases/latest
+            return_content: true
+          delegate_to: 127.0.0.1
+          register: karakeep_version_response
+
+        - name: "Version: Parse"
+          ansible.builtin.set_fact:
+            karakeep_version: "{{ karakeep_version_response['json']['tag_name'] | regex_replace('^v', '') }}"
+
+    - name: Install Nodesource Repo
+      block:
+        - name: Key tempdir
+          ansible.builtin.tempfile:
+            state: directory
+            suffix: key
+          register: temp_path
+
+        - name: Download Key
+          ansible.builtin.get_url:
+            url: "{{ nodesource_key }}"
+            dest: "{{ temp_path.path }}/nodesource.gpg"
+            mode: "664"
+            checksum: sha256:332d428848005f43bfc79b9578c55cd172f5f17ae38aa7d9328f03a24e21c13a
+
+        - name: Dearmor key
+          ansible.builtin.command:
+            cmd: "gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg {{ temp_path.path }}/nodesource.gpg"
+            creates: /etc/apt/keyrings/nodesource.gpg
+
+        - name: Install Nodesource Repo
+          ansible.builtin.apt_repository:
+            repo: "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] {{ nodesource_repo }} nodistro main"
+
+    - name: Install Packages
+      ansible.builtin.apt:
+        install_recommends: false
+        update_cache: true
+        autoclean: true
+        name: "{{ lookup('file', 'files/karakeep/packages.txt').splitlines() }}"
+
+    - name: Install yt-dlp
+      ansible.builtin.get_url:
+        url: "{{ ytdlp_loc }}"
+        dest: /usr/bin/yt-dlp
+        mode: "0775"
+
+    - name: Install Monolith
+      ansible.builtin.get_url:
+        url: "{{ monolith_loc }}"
+        dest: /usr/bin/monolith
+        mode: "0775"
+
+    - name: Install Meilisearch
+      ansible.builtin.apt:
+        deb: "{{ meilisearch_deb }}"
+
+    - name: Create Meilisearch User
+      ansible.builtin.user:
+        name: meilisearch
+        shell: /usr/sbin/nologin
+        home: "{{ meilisearch_data }}"
+        create_home: false
+        system: true
+
+    - name: Create Karakeep User
+      ansible.builtin.user:
+        name: karakeep
+        shell: /usr/sbin/nologin/etc/karakeep
+        home: "{{ karakeep_install }}"
+        create_home: true
+        system: true
+
+    - name: Template Configuration
+      block:
+        - name: Make directory
+          ansible.builtin.file:
+            path: "{{ item }}"
+            state: directory
+            mode: "0755"
+          loop:
+            - "{{ meilisearch_data }}"
+            - "{{ karakeep_data }}"
+            - "{{ karakeep_install }}"
+            - "{{ karakeep_log }}"
+            - "/etc/karakeep"
+
+        - name: Karakeep Env
+          ansible.builtin.template:
+            src: files/karakeep/karakeep.env.j2
+            dest: "{{ karakeep_env }}"
+
+            mode: "0600"
+            owner: karakeep
+            group: karakeep
+
+        - name: Meilisearch toml
+          ansible.builtin.template:
+            src: files/karakeep/meilisearch.toml.j2
+            dest: "{{ meilisearch_conf }}"
+            mode: "0600"
+            owner: meilisearch
+            group: meilisearch
+          notify: meilisearch.service
+
+        - name: Set file version
+          ansible.builtin.copy:
+            content: "{{ karakeep_version }}"
+            dest: "{{ karakeep_install }}/version.txt"
+            mode: "664"
+
+    - name: Install Services
+      ansible.builtin.template:
+        src: "files/karakeep/{{ item }}.j2"
+        dest: "/etc/systemd/system/{{ item }}"
+        mode: "664"
+      notify: "{{ item }}"
+      loop:
+        - karakeep-browser.service
+        - karakeep-web.service
+        - karakeep-worker.service
+        - karakeep.target
+        - meilisearch.service
+      register: services
+
+    - name: Daemon Reload
+      ansible.builtin.systemd_service:
+        daemon_reload: true
+      when: "services.changed" # noqa: no-handler
+
+    - name: Install karakeep
+      when:
+      block:
+        - name: Tempdir
+          check_mode: false
+          ansible.builtin.tempfile:
+            state: directory
+            suffix: download
+          register: temp_path
+        - name: Tempdir2
+          check_mode: false
+          ansible.builtin.tempfile:
+            state: directory
+            suffix: install
+          register: temp_path2
+
+        - name: Download
+          ansible.builtin.get_url:
+            url: "https://github.com/karakeep-app/karakeep/archive/refs/tags/v{{ karakeep_version }}.zip"
+            dest: "{{ temp_path.path }}"
+            mode: "664"
+
+        - name: Extract
+          ansible.builtin.unarchive:
+            remote_src: true
+            src: "{{ temp_path.path }}/karakeep-{{ karakeep_version }}.zip"
+            dest: "{{ temp_path2.path }}"
+
+        - name: Copy
+          ansible.builtin.copy:
+            remote_src: true
+            src: "{{ temp_path2.path }}/karakeep-{{ karakeep_version }}/"
+            dest: "{{ karakeep_install }}"
+            mode: "664"
+
+        - name: Install NPM Corepack
+          community.general.npm:
+            name: corepack@0.31.0
+            global: true
+
+        - name: Build
+          environment:
+            NEXT_TELEMETRY_DISABLED: "1"
+            PUPPETEER_SKIP_DOWNLOAD: "true"
+            CI: "true"
+          block:
+            - name: "Build: Web"
+              ansible.builtin.shell: |
+                corepack enable
+                pnpm i --frozen-lockfile
+                pnpm build
+                echo $(date) > .completed
+              args:
+                executable: /bin/bash
+                chdir: "{{ karakeep_install }}/apps/web"
+                creates: "{{ karakeep_install }}/.completed"
+
+            - name: "Build: Workers"
+              ansible.builtin.shell: |
+                pnpm i --frozen-lockfile
+                echo $(date) > .completed
+              args:
+                executable: /bin/bash
+                chdir: "{{ karakeep_install }}/apps/workers"
+                creates: "{{ karakeep_install }}/apps/workers/.completed"
+
+            - name: "Build: Cli"
+              ansible.builtin.shell: |
+                pnpm i --frozen-lockfile
+                pnpm build
+                echo $(date) > .completed
+              args:
+                executable: /bin/bash
+                chdir: "{{ karakeep_install }}/apps/cli"
+                creates: "{{ karakeep_install }}/apps/cli/.completed"
+
+            - name: "Build: Migrate"
+              ansible.builtin.shell: |
+                pnpm migrate
+                echo $(date) > .completed
+              args:
+                executable: /bin/bash
+                chdir: "{{ karakeep_install }}/packages/db"
+                creates: "{{ karakeep_install }}/packages/db/.completed"
+
+    - name: Correct Permissions
+      block:
+        - name: "Permissions: Karakeep"
+          ansible.builtin.file:
+            path: "{{ item }}"
+            recurse: true
+            owner: karakeep
+            group: karakeep
+            # mode: "664"
+          loop:
+            - "{{ karakeep_install }}"
+            - "{{ karakeep_data }}"
+            - "{{ karakeep_conf }}"
+            - "{{ karakeep_log }}"
+
+        - name: "Permissions: Meilisearch Data"
+          ansible.builtin.file:
+            path: "{{ meilisearch_conf }}"
+            owner: karakeep
+            group: karakeep
+            # mode: "664"
+
+        - name: "Permissions: Meilisearch conf"
+          ansible.builtin.file:
+            path: "{{ meilisearch_data }}"
+            recurse: true
+            owner: karakeep
+            group: karakeep
+            # mode: "664"
+
+  handlers:
+    - name: Restart karakeep-browser
+      ansible.builtin.systemd_service:
+        name: karakeep-browser.service
+        state: restarted
+        enabled: true
+      listen: karakeep-browser.service
+
+    - name: Restart karakeep-web
+      ansible.builtin.systemd_service:
+        name: karakeep-web.service
+        state: restarted
+        enabled: true
+      listen: karakeep-web.service
+
+    - name: Restart karakeep-worker
+      ansible.builtin.systemd_service:
+        name: karakeep-worker.service
+        state: restarted
+        enabled: true
+      listen: karakeep-worker.service
+
+    - name: Enable karakeep target
+      ansible.builtin.systemd_service:
+        name: karakeep.target
+        enabled: true
+      listen: karakeep.target
+
+    - name: Restart meilisearch
+      ansible.builtin.systemd_service:
+        name: meilisearch.service
+        state: restarted
+        enabled: true
+      listen: meilisearch.service

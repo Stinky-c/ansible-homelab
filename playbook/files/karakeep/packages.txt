@@ -1,0 +1,12 @@
+xz-utils
+g++
+curl
+build-essential
+sudo
+unzip
+graphicsmagick
+ghostscript
+ca-certificates
+chromium
+nodejs
+unzip

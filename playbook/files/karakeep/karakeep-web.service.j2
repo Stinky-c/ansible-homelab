@@ -1,0 +1,19 @@
+[Unit]
+Description=Karakeep web
+Wants=network.target karakeep-workers.service
+After=network.target karakeep-workers.service
+
+[Service]
+User=karakeep
+Group=karakeep
+Restart=on-failure
+EnvironmentFile={{ karakeep_env }}
+WorkingDirectory={{ karakeep_install }}/apps/web
+ExecStart=/usr/bin/pnpm start
+StandardOutput=file:{{ karakeep_log }}/karakeep-web.log
+StandardError=file:{{ karakeep_log }}/karakeep-web.log
+TimeoutStopSec=5
+SyslogIdentifier=karakeep-web
+
+[Install]
+WantedBy=multi-user.target

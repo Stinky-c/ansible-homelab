@@ -1,0 +1,4 @@
+---
+meiliseach_master_key: "{{ vault_meiliseach_master_key }}"
+karakeep_secret_key: "{{ vault_karakeep_secret_key }}"
+openai_api_key: "{{ vault_openai_api_key }}"
