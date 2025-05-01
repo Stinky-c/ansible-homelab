@@ -39,6 +39,7 @@ snmpd:
     dumbdocker:
     nas:
     dev2:
+    pve:
 
 docker:
   children:

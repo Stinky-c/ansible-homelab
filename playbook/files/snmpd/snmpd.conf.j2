@@ -24,4 +24,9 @@ extend hardware '/bin/cat /sys/firmware/devicetree/base/model'
 
 {% if 'zfs-dkms' in ansible_facts.packages %}
 extend zfs /etc/snmp/zfs -b
-{%endif%}
+{% endif %}
+{% if ansible_hostname == 'pve' %}
+# Proxmox scripts
+# https://docs.librenms.org/Extensions/Applications/Proxmox/
+extend proxmox /usr/bin/sudo /usr/local/bin/proxmox
+{% endif%}

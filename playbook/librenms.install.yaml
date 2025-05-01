@@ -128,6 +128,8 @@
         src: files/librenms/preseed.yaml.j2
         dest: /opt/librenms/database/seeders/config/preeseed.yaml
         mode: "0664"
+        owner: librenms
+        group: librenms
 
     - name: Test env
       ansible.builtin.command: cat /opt/librenms/.env

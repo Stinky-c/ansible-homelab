@@ -15,7 +15,7 @@
       ansible.builtin.get_url:
         url: https://github.com/librenms/librenms-agent/raw/master/snmp/distro
         dest: /usr/bin/distro
-        mode: "0755"
+        mode: "755"
 
     - name: ZFS Check
       when: "'zfs-dkms' in ansible_facts.packages"
@@ -24,16 +24,35 @@
           ansible.builtin.get_url:
             url: https://github.com/librenms/librenms-agent/raw/master/snmp/zfs
             dest: /etc/snmp/zfs
-            mode: "0755"
+            mode: "755"
           register: install_zfs
 
-        - name: Install ZFS command packages
+        - name: Install ZFS Command Packages
           ansible.builtin.apt:
             update_cache: true
             pkg:
               - libjson-perl
               - libmime-base64-perl
               - libfile-slurp-perl
+
+    - name: Proxmox Check
+      when: "ansible_hostname == 'pve'"
+      block:
+        - name: Install Proxmox Command
+          ansible.builtin.get_url:
+            url: https://github.com/librenms/librenms-agent/raw/master/agent-local/proxmox
+            dest: /usr/local/bin/proxmox
+            mode: "755"
+            owner: "Debian-snmp"
+            group: "Debian-snmp"
+
+        - name: Add Permissions
+          ansible.builtin.copy:
+            dest: /etc/sudoers.d/proxmox
+            src: files/snmpd/proxmox.sudo
+            mode: "440"
+            owner: root
+            group: root
 
     - name: Install snmpd conf
       ansible.builtin.template:

@@ -1,0 +1,1 @@
+Debian-snmp ALL=(ALL) NOPASSWD: /usr/local/bin/proxmox
