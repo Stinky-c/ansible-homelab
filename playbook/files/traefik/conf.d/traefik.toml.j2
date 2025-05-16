@@ -1,0 +1,9 @@
+[http.routers]
+    [http.routers.traefik-api]
+        rule = "Host(`traefik.{{ traefik_domain }}`)"
+        service = "api@internal"
+        middlewares = ["traefik-auth"]
+
+[http.middlewares]
+    [http.middlewares.traefik-auth.basicAuth]
+        users = ["{{ traefik_api_auth }}"]

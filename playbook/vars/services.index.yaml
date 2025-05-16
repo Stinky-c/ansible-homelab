@@ -1,0 +1,69 @@
+jellystack:
+  - service: jellyfin
+    rule: "Host(`jellyfin.{{ traefik_domain }}`)"
+    url: "http://192.168.1.129:8096"
+    middlewares:
+      - jellyfin-mw
+
+  - service: jellyseer
+    rule: "Host(`jellyseer.home.{{ traefik_root_domain }}`)"
+    url: "http://192.168.1.129:5055"
+    middlewares:
+
+local:
+  - service: mealie
+    rule: "Host(`mealie.{{ traefik_domain }}`)"
+    url: "http://192.168.1.134:9225"
+    middlewares:
+
+  - service: hoarder
+    rule: "Host(`hoarder.{{ traefik_domain }}`) || Host(`karakeep.{{ traefik_domain }}`)"
+    url: "http://192.168.1.14:3000"
+    middlewares:
+
+  - service: pihole-lxc
+    rule: "Host(`pihole.{{ traefik_domain }}`)"
+    url: "http://192.168.1.3:80"
+    middlewares:
+      - pihole-redirect
+
+  - service: pihole-2
+    rule: "Host(`pihole-2.{{ traefik_domain }}`)"
+    url: "http://192.168.0.3:80"
+    middlewares:
+      - pihole-redirect
+
+  - service: ddns
+    rule: "Host(`ddns.{{ traefik_domain }}`)"
+    url: "http://192.168.1.8:8000"
+    middlewares:
+
+  - service: dockage
+    rule: "Host(`dockage.{{ traefik_domain }}`)"
+    url: "http://192.168.1.128:5001"
+    middlewares:
+
+  - service: hass
+    rule: "Host(`hass.{{ traefik_domain }}`)"
+    url: "http://192.168.0.10:8123"
+    middlewares:
+
+  - service: ntfy
+    rule: "Host(`ntfy.{{ traefik_domain }}`)"
+    url: "http://192.168.1.5:80"
+    middlewares:
+
+  - service: portainer
+    rule: "Host(`portainer.{{ traefik_domain }}`)"
+    url: "https://192.168.0.239:9443"
+    middlewares:
+
+  - service: pve
+    rule: "Host(`pve.{{ traefik_domain }}`)"
+    url: "https://192.168.0.189:8006"
+    middlewares:
+
+  - service: quartz
+    rule: "Host(`quartz.{{ traefik_domain }}`)"
+    url: "http://192.168.1.7:80"
+    middlewares:

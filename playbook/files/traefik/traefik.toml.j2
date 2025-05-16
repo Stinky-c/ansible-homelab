@@ -1,0 +1,43 @@
+[providers.file]
+    directory = "/etc/traefik/conf.d/"
+    watch = true
+
+[entryPoints]
+    [entryPoints.web]
+        address = ":80"
+        [entryPoints.web.http.redirections]
+            [entryPoints.web.http.redirections.entryPoint]
+                to = "websecure"
+                scheme = "https"
+#        [entryPoints.web.forwardedHeaders]
+#            trustedIPs = {{ traefik_allowed_subnets | tojson }}
+    [entryPoints.websecure]
+        address = ":443"
+        asDefault = true
+#        [entryPoints.websecure.forwardedHeaders]
+#            trustedIPs = {{ traefik_allowed_subnets | tojson }}
+        [entryPoints.websecure.http.tls]
+            certResolver = "cloudflare"
+
+[certificatesResolvers.cloudflare.acme]
+    email = "{{ traefik_email }}"
+    storage = "/etc/traefik/ssl/cf_acme.json"
+    [certificatesResolvers.cloudflare.acme.dnsChallenge]
+        provider = "cloudflare"
+        resolvers = ["1.1.1.1:53","1.0.0.1:53"]
+
+[log]
+    filepath = "/var/log/traefik/traefik.log"
+    format = "common"
+    level = "INFO"
+
+[accessLog]
+    filepath = "/var/log/traefik/access.log"
+    format = "common"
+    bufferingSize = 30
+    [accessLog.filters]
+        statusCodes = ["200", "300-302"]
+        retryAttempts = true
+        minDuration = "10ms"
+
+[api]

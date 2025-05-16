@@ -1,0 +1,29 @@
+[http.services]
+{% for service in services.jellystack %}
+    [http.services.{{ service.service }}.loadBalancer]
+        [[http.services.{{ service.service }}.loadBalancer.servers]]
+            url = "{{ service.url }}"
+
+{% endfor %}
+
+[http.routers]
+{% for service in services.jellystack %}
+    [http.routers.{{service.service}}]
+        rule = "{{ service.rule }}"
+        service = "{{ service.service }}"
+    {% if service.middlewares is not none %}
+    middlewares = {{service.middlewares|tojson}}
+    {% endif %}
+
+{% endfor %}
+[http.middlewares]
+    [http.middlewares.jellyfin-mw.headers]
+        STSSeconds = 315360000
+        STSIncludeSubdomains = true
+        STSPreload = true
+        contentTypeNosniff = true
+        customFrameOptionsValue = "allow-from https://jellyfin.{{ traefik_domain }}"
+
+    [http.middlewares.jellyfin-mw.headers.customRequestHeaders]
+        X-Robots-Tag = "noindex,nofollow,nosnippet,noarchive,notranslate,noimageindex"
+        X-XSS-PROTECTION = 1

@@ -1,0 +1,72 @@
+---
+- name: Traefik install
+  hosts: traefik
+  vars:
+    traefik_version: "3.4.0"
+    # TODO: find a way to find these better
+    # ansible_architecture: x86_64
+    # ansible_system: Linux
+    traefik_dist: "linux"
+    traefik_arch: "amd64"
+  tasks:
+    - name: Install Traefik Binary
+      ansible.builtin.unarchive:
+        src: "https://github.com/traefik/traefik/releases/download/v{{ traefik_version }}/traefik_v{{ traefik_version }}_{{ traefik_dist }}_{{ traefik_arch }}.tar.gz"
+        dest: "/usr/local/bin"
+        mode: "755"
+        remote_src: true
+        include:
+          - "traefik"
+      notify: Restart Traefik
+
+    - name: Create Traefik Config Directory
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        mode: "755"
+      loop:
+        - /etc/traefik
+        - /etc/traefik/conf.d
+        - /etc/traefik/ssl
+
+    - name: Install Service Files
+      ansible.builtin.template:
+        src: files/traefik/traefik.service.j2
+        dest: /etc/systemd/system/traefik.service
+        mode: "644"
+      notify: Restart Traefik
+
+    - name: Install Environment File
+      ansible.builtin.template:
+        src: files/traefik/env.j2
+        dest: /etc/traefik/env
+        mode: "644"
+      notify: Restart Traefik
+
+    - name: Include Serivce Varaibles
+      ansible.builtin.include_vars:
+        file: services.index.yaml
+        name: services
+
+    - name: Template Main Config
+      ansible.builtin.template:
+        src: files/traefik/traefik.toml.j2
+        dest: /etc/traefik/traefik.toml
+        mode: "644"
+      notify: Restart Traefik
+
+    - name: Template conf.d
+      ansible.builtin.template:
+        src: "{{ item }}"
+        dest: "/etc/traefik/conf.d/{{ item | basename | regex_replace('\\.j2$', '') }}"
+        mode: "644"
+      with_fileglob:
+        - "files/traefik/conf.d/*.toml.j2"
+      notify: Restart Traefik
+
+  handlers:
+    - name: Restart Traefik
+      ansible.builtin.service:
+        name: traefik
+        state: restarted
+        enabled: true

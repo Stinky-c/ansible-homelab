@@ -1,0 +1,22 @@
+[http.services]
+{% for service in services.local %}
+    [http.services.{{ service.service }}.loadBalancer]
+        [[http.services.{{ service.service }}.loadBalancer.servers]]
+            url = "{{ service.url }}"
+
+{% endfor %}
+
+[http.routers]
+{% for service in services.local %}
+    [http.routers.{{service.service}}]
+        rule = "{{ service.rule }}"
+        service = "{{ service.service }}"
+    {% if service.middlewares is not none %}
+    middlewares = {{service.middlewares|tojson}}
+    {% endif %}
+
+{% endfor %}
+[http.middlewares]
+    [http.middlewares.pihole-redirect.redirectRegex]
+        regex = "^https?://(.*\\.com)/?$"
+        replacement = "https://${1}/admin"

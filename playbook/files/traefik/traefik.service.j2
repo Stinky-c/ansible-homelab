@@ -1,0 +1,12 @@
+[Unit]
+Description=Traefik is an open-source Edge Router that makes publishing your services a fun and easy experience
+
+[Service]
+Type=notify
+ExecStart=/usr/local/bin/traefik --configFile=/etc/traefik/traefik.toml
+Restart=on-failure
+ExecReload=/bin/kill -USR1 $MAINPID
+EnvironmentFile=/etc/traefik/env
+
+[Install]
+WantedBy=multi-user.target

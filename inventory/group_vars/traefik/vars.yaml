@@ -1,0 +1,7 @@
+---
+traefik_email: "{{ vault_traefik_email }}"
+traefik_cf_token: "{{ vault_traefik_cf_token }}"
+traefik_allowed_subnets: "{{ vault_traefik_allowed_subnets }}"
+traefik_domain: "{{ vault_traefik_domain }}"
+traefik_root_domain: "{{ vault_traefik_root_domain }}"
+traefik_api_auth: "{{ vault_traefik_api_auth }}"
