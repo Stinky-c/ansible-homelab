@@ -1,0 +1,10 @@
+---
+- name: Metrics Install
+  hosts: metrics
+  roles:
+    - role: grafana.grafana.grafana
+    - role: prometheus.prometheus.prometheus
+    - role: grafana.grafana.alloy
+  vars:
+
+  tasks:

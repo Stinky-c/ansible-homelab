@@ -1,0 +1,33 @@
+# Grafana
+grafana_ini:
+  security:
+    admin_user: root
+    admin_password: "{{ vault_grafana_admin_password }}"
+
+  server:
+    domain: "metrics.host.buckydev.com"
+
+grafana_datasources:
+  - name: "metrics"
+    type: "prometheus"
+    url: "http://localhost:9090"
+
+# Prometheus
+prometheus_storage_retention: "90d"
+prometheus_config_flags_extra:
+  web.enable-remote-write-receiver: ""
+
+# Alloy
+alloy_config: |
+  prometheus.remote_write "remote" {
+    endpoint {
+      url = "http://{{ hostvars['metrics.host.buckydev.com']['ansible_host'] }}:9090/api/v1/write"
+    }
+  }
+
+  prometheus.exporter.unix "node" { }
+
+  prometheus.scrape "unix_scrape" {
+    targets = prometheus.exporter.unix.node.targets
+    forward_to = [prometheus.remote_write.remote.receiver]
+  }

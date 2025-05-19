@@ -52,6 +52,7 @@ all:
 vagrant:
   children:
     karakeep:
+    metrics:
   vars:
     ansible_host: 192.168.121.10
     ansible_ssh_private_key_file: .vagrant/machines/default/libvirt/private_key
