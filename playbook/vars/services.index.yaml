@@ -6,8 +6,33 @@ jellystack:
       - jellyfin-mw
 
   - service: jellyseer
-    rule: "Host(`jellyseer.home.{{ traefik_root_domain }}`)"
+    rule: "Host(`jellyseer.{{ traefik_domain }}`) || Host(`jellyseer.arr.{{ traefik_root_domain }}`)"
     url: "http://192.168.1.129:5055"
+    middlewares:
+
+  - service: homarr
+    rule: "Host(`home.arr.{{ traefik_root_domain }}`)"
+    url: "http://192.168.1.129:7575"
+    middlewares:
+
+  - service: qbitt
+    rule: "Host(`qbitt.arr.{{ traefik_root_domain }}`)"
+    url: "http://192.168.1.129:8080"
+    middlewares:
+
+  - service: radarr
+    rule: "Host(`rad.arr.{{ traefik_root_domain }}`)"
+    url: "http://192.168.1.129:7878"
+    middlewares:
+
+  - service: sonarr
+    rule: "Host(`son.arr.{{ traefik_root_domain }}`)"
+    url: "http://192.168.1.129:8989"
+    middlewares:
+
+  - service: prowlarr
+    rule: "Host(`prowl.arr.{{ traefik_root_domain }}`)"
+    url: "http://192.168.1.129:9696"
     middlewares:
 
 local:
