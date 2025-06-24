@@ -1,5 +1,5 @@
 [http.services]
-{% for service in services.jellystack %}
+{% for service in services.external %}
     [http.services.{{ service.service }}.loadBalancer]
         [[http.services.{{ service.service }}.loadBalancer.servers]]
             url = "{{ service.url }}"
@@ -7,8 +7,9 @@
 {% endfor %}
 
 [http.routers]
-{% for service in services.jellystack %}
+{% for service in services.external %}
     [http.routers.{{service.service}}]
+        entryPoints = ["websecureexternal"]
         rule = "{{ service.rule }}"
         service = "{{ service.service }}"
     {% if service.middlewares is not none %}

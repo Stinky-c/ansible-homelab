@@ -11,6 +11,7 @@
                 scheme = "https"
 #        [entryPoints.web.forwardedHeaders]
 #            trustedIPs = {{ traefik_allowed_subnets | tojson }}
+
     [entryPoints.websecure]
         address = ":443"
         asDefault = true
@@ -19,8 +20,22 @@
         [entryPoints.websecure.http.tls]
             certResolver = "cloudflare"
             [[entryPoints.websecure.http.tls.domains]]
-                main = "{{ traefik_domain }}"
-                sans = ["*.{{ traefik_domain }}", "*.arr.{{ traefik_root_domain }}"]
+                main = "{{ traefik_root_domain }}"
+                sans = ["*.{{ traefik_local_domain }}", "*.{{ traefik_jellystack_domain }}"]
+
+    [entryPoints.webexternal]
+        address = ":8080"
+        [entryPoints.webexternal.http.redirections]
+            [entryPoints.webexternal.http.redirections.entryPoint]
+                # to = "websecureexternal"
+                scheme = "https"
+                permanent = true
+
+    [entryPoints.websecureexternal]
+        address = ":8443"
+        [entryPoints.websecureexternal.http.tls]
+            certResolver = "cloudflare"
+
 
 [certificatesResolvers.cloudflare.acme]
     email = "{{ traefik_email }}"

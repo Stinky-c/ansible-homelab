@@ -8,10 +8,11 @@
     # ansible_system: Linux
     traefik_dist: "linux"
     traefik_arch: "amd64"
+    traefik_archive: "traefik_v{{ traefik_version }}_{{ traefik_dist }}_{{ traefik_arch }}.tar.gz"
   tasks:
     - name: Install Traefik Binary
       ansible.builtin.unarchive:
-        src: "https://github.com/traefik/traefik/releases/download/v{{ traefik_version }}/traefik_v{{ traefik_version }}_{{ traefik_dist }}_{{ traefik_arch }}.tar.gz"
+        src: "https://github.com/traefik/traefik/releases/download/v{{ traefik_version }}/{{ traefik_archive }}"
         dest: "/usr/local/bin"
         mode: "755"
         remote_src: true

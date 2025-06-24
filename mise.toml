@@ -2,20 +2,22 @@
 EDITOR = "code --wait"
 
 [tools]
+"pipx:ansible-dev-tools" = "latest"
 "pipx:ansible-core" = { version = "latest", uvx_args = "--with ansible" }
 "pipx:ansible-lint" = "latest"
 
-[tasks.host-vars]
+[tasks.vars]
 alias = "vars"
 description = "Lists all host vars"
-run = "ansible -m debug -a var=hostvars[inventory_hostname] --vault-password-file pass/*"
+run = "ansible -m setup {{arg(name='host_name')}}"
 
 
 [tasks.playbook]
 description = "Shortcut for running a select playbook"
-run = "ansible-playbook --vault-password-file pass/*"
+run = "ansible-playbook {{arg(name='file')}}"
 alias = ["p", "play"]
 
 [tasks.edit]
 description = "Edits a vault using VSCode"
 run = "ansible-vault edit {{arg(name='file')}}"
+alias = ["e"]
