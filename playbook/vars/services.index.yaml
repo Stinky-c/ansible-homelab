@@ -1,38 +1,38 @@
 jellystack:
   - service: jellyfin
     rule: "Host(`jellyfin.{{ traefik_local_domain }}`)"
-    url: "http://192.168.1.129:8096"
+    url: "http://192.168.0.11:8096"
     middlewares:
       - jellyfin-mw
 
   - service: jellyseer
     rule: "Host(`jellyseer.{{ traefik_local_domain }}`) || Host(`jellyseer.arr.{{ traefik_root_domain }}`)"
-    url: "http://192.168.1.129:5055"
+    url: "http://192.168.0.11:5055"
     middlewares:
 
   - service: homarr
     rule: "Host(`home.arr.{{ traefik_root_domain }}`)"
-    url: "http://192.168.1.129:7575"
+    url: "http://192.168.0.11:7575"
     middlewares:
 
   - service: qbitt
     rule: "Host(`qbitt.arr.{{ traefik_root_domain }}`)"
-    url: "http://192.168.1.129:8080"
+    url: "http://192.168.0.11:8080"
     middlewares:
 
   - service: radarr
     rule: "Host(`rad.arr.{{ traefik_root_domain }}`)"
-    url: "http://192.168.1.129:7878"
+    url: "http://192.168.0.11:7878"
     middlewares:
 
   - service: sonarr
     rule: "Host(`son.arr.{{ traefik_root_domain }}`)"
-    url: "http://192.168.1.129:8989"
+    url: "http://192.168.0.11:8989"
     middlewares:
 
   - service: prowlarr
     rule: "Host(`prowl.arr.{{ traefik_root_domain }}`)"
-    url: "http://192.168.1.129:9696"
+    url: "http://192.168.0.11:9696"
     middlewares:
 
 local:
@@ -50,13 +50,13 @@ local:
     rule: "Host(`pihole.{{ traefik_local_domain }}`)"
     url: "http://192.168.1.3:80"
     middlewares:
-      - pihole-redirect
+      # - pihole-redirect
 
   - service: pihole-2
     rule: "Host(`pihole-2.{{ traefik_local_domain }}`)"
     url: "http://192.168.0.3:80"
     middlewares:
-      - pihole-redirect
+      # - pihole-redirect
 
   - service: ddns
     rule: "Host(`ddns.{{ traefik_local_domain }}`)"
@@ -93,9 +93,14 @@ local:
     url: "http://192.168.1.7:80"
     middlewares:
 
+  - service: immich
+    rule: "Host(`immich.{{ traefik_local_domain }}`)"
+    url: "http://192.168.0.11:2283"
+    middlewares:
+
 external:
   - service: jellyfin-external
     rule: "Host(`watch.{{ traefik_root_domain }}`)"
-    url: "http://192.168.1.129:8096" # Public jellyfin port = 8196; unused due to issues
+    url: "http://192.168.0.11:8096" # Public jellyfin port = 8196; unused due to issues
     middlewares:
       - jellyfin-mw
