@@ -1,0 +1,31 @@
+---
+- name: Metrics collector install
+  hosts: metrics
+  tasks:
+    - name: Make config directory
+      ansible.builtin.file:
+        path: "/etc/alloy/config"
+        state: directory
+        mode: "644"
+        owner: root
+        group: root
+
+    - name: Template alloy config
+      ansible.builtin.template:
+        src: "files/metrics/config.alloy.j2"
+        dest: "/etc/alloy/conf.alloy"
+        mode: "644"
+      notify: Restart alloy
+
+      # Delay alloy install to prevent erroring when first start
+    - name: Install alloy
+      ansible.builtin.import_role:
+        name: "grafana.grafana.alloy"
+      notify: Restart alloy
+
+  handlers:
+    - name: Restart alloy
+      ansible.builtin.service:
+        name: alloy
+        state: restarted
+        enabled: true

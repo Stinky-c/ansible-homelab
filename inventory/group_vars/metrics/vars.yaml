@@ -8,9 +8,14 @@ grafana_ini:
     domain: "metrics.host.buckydev.com"
 
 grafana_datasources:
-  - name: "metrics"
-    type: "prometheus"
+  - name: metrics
+    type: prometheus
     url: "http://localhost:9090"
+
+grafana_dashboards:
+  - dashboard_id: 1860
+    revision_id: 41
+    datasource: metrics
 
 # Prometheus
 prometheus_storage_retention: "90d"
@@ -18,16 +23,6 @@ prometheus_config_flags_extra:
   web.enable-remote-write-receiver: ""
 
 # Alloy
-alloy_config: |
-  prometheus.remote_write "remote" {
-    endpoint {
-      url = "http://{{ hostvars['metrics.host.buckydev.com']['ansible_host'] }}:9090/api/v1/write"
-    }
-  }
-
-  prometheus.exporter.unix "node" { }
-
-  prometheus.scrape "unix_scrape" {
-    targets = prometheus.exporter.unix.node.targets
-    forward_to = [prometheus.remote_write.remote.receiver]
-  }
+alloy_env_file_vars:
+  CONFIG_FILE: /etc/alloy/conf.alloy
+  CUSTOM_ARGS: "--server.http.listen-addr=0.0.0.0:12345 --stability.level=public-preview --feature.community-components.enabled=true"

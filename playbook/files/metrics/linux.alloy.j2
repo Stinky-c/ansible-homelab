@@ -1,0 +1,11 @@
+prometheus.exporter.unix "node" {
+    enable_collectors = ["system", "processes"]
+    systemd {
+        task_metrics = true
+    }
+}
+
+prometheus.scrape "unix_scrape" {
+    targets = prometheus.exporter.unix.node.targets
+    forward_to = [prometheus.remote_write.remote.receiver]
+}

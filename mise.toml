@@ -3,9 +3,9 @@ EDITOR = "code --wait"
 LIBVIRT_DEFAULT_URI = "qemu:///system"
 
 [tools]
-"pipx:ansible-dev-tools" = "latest"
-"pipx:ansible-core" = { version = "latest", uvx_args = "--with ansible" }
-"pipx:ansible-lint" = "latest"
+"pipx:ansible" = { version = "latest", uvx = "false", pipx_args = "--include-deps --preinstall netaddr --preinstall jmespath" }
+"pipx:ansible-dev-tools" = { version = "latest", uvx = "false" }
+"pipx:ansible-lint" = { version = "latest", uvx = "false" }
 
 [tasks.vars]
 alias = "vars"

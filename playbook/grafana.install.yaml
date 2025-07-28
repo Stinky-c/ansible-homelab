@@ -1,10 +1,12 @@
 ---
-- name: Metrics Install
+- name: Grafana Install
   hosts: metrics
   roles:
     - role: grafana.grafana.grafana
     - role: prometheus.prometheus.prometheus
-    - role: grafana.grafana.alloy
-  vars:
-
   tasks:
+    # Hello world!
+
+# Setup metrics here too
+- name: Setup metrics
+  ansible.builtin.import_playbook: "metrics.install.yaml"

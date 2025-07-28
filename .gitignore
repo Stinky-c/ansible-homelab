@@ -1,4 +1,5 @@
 .vscode/
 .ansible/
 .vagrant/
+.venv/
 Notes.md
