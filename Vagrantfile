@@ -1,8 +1,11 @@
 Vagrant.configure("2") do |config|
   config.vagrant.plugins = "vagrant-libvirt"
-  config.vm.box = "generic/debian12"
-  config.vm.box_version = "4.3.12"
+  config.vm.box = "debian/bookworm64"
+  config.vm.box_version = "12.20250126.1"
+  # no root password, sudo works without password
 
+  # Disable synced folder
+  config.vm.synced_folder ".", "/vagrant", disabled: true
 
   config.vm.provider :libvirt do |libvirt|
     libvirt.memory = 4096

@@ -1,5 +1,6 @@
 [env]
 EDITOR = "code --wait"
+LIBVIRT_DEFAULT_URI = "qemu:///system"
 
 [tools]
 "pipx:ansible-dev-tools" = "latest"
