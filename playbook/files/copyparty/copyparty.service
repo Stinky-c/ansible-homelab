@@ -1,0 +1,42 @@
+
+
+[Unit]
+Description=copyparty file server
+
+[Service]
+Type=notify
+SyslogIdentifier=copyparty
+Environment=PYTHONUNBUFFERED=x
+ExecReload=/bin/kill -s USR1 $MAINPID
+PermissionsStartOnly=true
+
+User=cpp
+Group=cpp
+WorkingDirectory=/var/lib/copyparty
+Environment=XDG_CONFIG_HOME=/var/lib/copyparty/.config
+
+AmbientCapabilities=CAP_NET_BIND_SERVICE
+
+# Some hardening
+MemoryMax=50%
+MemorySwapMax=50%
+ProtectClock=true
+ProtectControlGroups=true
+ProtectHostname=true
+ProtectKernelLogs=true
+ProtectKernelModules=true
+ProtectKernelTunables=true
+ProtectProc=invisible
+RemoveIPC=true
+RestrictNamespaces=true
+RestrictRealtime=true
+RestrictSUIDSGID=true
+
+# Define $LOGS_DIRECTORY
+LogsDirectory=copyparty
+
+ExecStart=/usr/bin/python3 /usr/local/bin/copyparty-sfx.py -c /etc/copyparty.conf
+
+
+[Install]
+WantedBy=multi-user.target

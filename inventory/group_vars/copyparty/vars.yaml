@@ -1,0 +1,2 @@
+copyparty_admin_password: "{{ vault_copyparty_admin_password }}"
+copyparty_user_password: "{{ vault_copyparty_user_password }}"

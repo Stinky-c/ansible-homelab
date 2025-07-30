@@ -1,0 +1,79 @@
+- name: Copyparty Install
+  hosts: copyparty
+  vars:
+    rootdir: "/srv/copyparty"
+    copyparty_url: "https://github.com/9001/copyparty/releases/latest/download/copyparty-sfx.py"
+  tasks:
+    - name: Install dependencies
+      ansible.builtin.apt:
+        name:
+          - ffmpeg
+          - python3-pillow
+        state: present
+        update_cache: true
+        cache_valid_time: 86400 # 1 day
+
+    - name: Create group
+      ansible.builtin.group:
+        name: cpp
+        state: present
+
+    - name: Create user
+      ansible.builtin.user:
+        name: cpp
+        group: cpp
+        password: "!"
+        shell: /sbin/nologin
+        home: "/var/lib/copyparty/"
+        create_home: true
+        state: present
+
+    - name: Create directories
+      ansible.builtin.file:
+        path: "{{ item }}"
+        mode: "755"
+        owner: cpp
+        group: cpp
+        state: directory
+      loop:
+        - "/var/lib/copyparty/.config"
+        - "{{ rootdir }}"
+        - "{{ rootdir }}/uploads"
+
+    - name: Download copyparty
+      ansible.builtin.get_url:
+        url: "{{ copyparty_url }}"
+        dest: "/usr/local/bin/copyparty-sfx.py"
+        mode: "755"
+
+    - name: Template Config
+      ansible.builtin.template:
+        src: "files/copyparty/copyparty.conf"
+        dest: "/etc/copyparty.conf"
+        mode: "660"
+        owner: cpp
+        group: cpp
+      notify: Restart Copyparty
+
+    - name: Services
+      block:
+        - name: Copy Service
+          ansible.builtin.template:
+            src: "files/copyparty/copyparty.service"
+            dest: "/etc/systemd/system/copyparty.service"
+            mode: "0644"
+            owner: root
+            group: root
+
+        - name: Install Service
+          ansible.builtin.systemd:
+            name: "copyparty.service"
+            state: started
+            enabled: true
+            daemon_reload: true
+
+  handlers:
+    - name: Restart Copyparty
+      ansible.builtin.systemd:
+        name: "copyparty.service"
+        state: restarted
