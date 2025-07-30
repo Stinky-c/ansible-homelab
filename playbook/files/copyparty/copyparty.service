@@ -14,6 +14,10 @@ User=cpp
 Group=cpp
 WorkingDirectory=/var/lib/copyparty
 Environment=XDG_CONFIG_HOME=/var/lib/copyparty/.config
+Environment=PRTY_NO_CFSSL=y
+Environment=PRTY_NO_MUTAGEN=y
+Environment=PRTY_NO_VIPS=y
+
 
 AmbientCapabilities=CAP_NET_BIND_SERVICE
 
