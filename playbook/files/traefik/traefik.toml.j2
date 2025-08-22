@@ -17,7 +17,7 @@
             certResolver = "cloudflare"
             [[entryPoints.websecure.http.tls.domains]]
                 main = "{{ traefik_root_domain }}"
-                sans = ["*.{{ traefik_local_domain }}", "*.{{ traefik_jellystack_domain }}"]
+                sans = ["*.{{ traefik_local_domain }}", "*.{{ traefik_jellystack_domain }}", "auth.{{ traefik_root_domain }}"]
 
     [entryPoints.websecureexternal]
         address = ":8443"
@@ -51,3 +51,9 @@
 # Permit services to use https
 [serversTransport]
   insecureSkipVerify = true
+
+
+# OIDC Auth Plugin
+[experimental.plugins.traefik-oidc-auth]
+  moduleName = "github.com/sevensolutions/traefik-oidc-auth"
+  version = "v0.15.0"

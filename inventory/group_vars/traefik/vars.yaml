@@ -7,3 +7,7 @@ traefik_api_auth: "{{ vault_traefik_api_auth }}"
 
 traefik_local_domain: "local.{{ traefik_root_domain }}"
 traefik_jellystack_domain: "arr.{{ traefik_root_domain }}"
+
+pocketid_encryption_key: "{{ vault_pocketid_encryption_key }}"
+pocketid_client_id: "{{ vault_pocketid_client_id }}"
+pocketid_client_secret: "{{ vault_pocketid_client_secret }}"

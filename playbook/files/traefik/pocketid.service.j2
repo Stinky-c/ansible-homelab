@@ -1,0 +1,12 @@
+[Unit]
+Description=Pocket ID - A simple OIDC provider for passwordless authentication
+
+[Service]
+Type=notify
+ExecStart=/usr/local/bin/pocketid
+Restart=on-failure
+EnvironmentFile=/etc/pocketid/env
+WorkingDirectory=/etc/pocketid
+
+[Install]
+WantedBy=multi-user.target

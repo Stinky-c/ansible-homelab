@@ -36,6 +36,11 @@ jellystack:
     middlewares:
 
 local:
+  - service: auth
+    rule: "Host(`auth.{{ traefik_root_domain }}`)"
+    url: "http://localhost:1411"
+    middlewares:
+
   - service: mealie
     rule: "Host(`mealie.{{ traefik_local_domain }}`)"
     url: "http://192.168.1.134:9225"

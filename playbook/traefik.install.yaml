@@ -3,12 +3,13 @@
   hosts: traefik
   vars:
     traefik_version: "3.4.0"
+    pocketid_version: "1.7.0"
     # TODO: find a way to find these better
     # ansible_architecture: x86_64
     # ansible_system: Linux
-    traefik_dist: "linux"
-    traefik_arch: "amd64"
-    traefik_archive: "traefik_v{{ traefik_version }}_{{ traefik_dist }}_{{ traefik_arch }}.tar.gz"
+    app_dist: "linux"
+    app_arch: "amd64"
+    traefik_archive: "traefik_v{{ traefik_version }}_{{ app_dist }}_{{ app_arch }}.tar.gz"
   tasks:
     - name: Install Traefik Binary
       ansible.builtin.unarchive:
@@ -20,6 +21,13 @@
           - "traefik"
       notify: Restart Traefik
 
+    - name: Install Pocket ID Binary
+      ansible.builtin.get_url:
+        url: "https://github.com/pocket-id/pocket-id/releases/download/v{{ pocketid_version }}/pocket-id-{{ app_dist }}-{{ app_arch }}"
+        dest: "/usr/local/bin/pocketid"
+        mode: "755"
+      notify: Restart Pocket ID
+
     - name: Create Traefik Config Directory
       ansible.builtin.file:
         path: "{{ item }}"
@@ -29,25 +37,40 @@
         - /etc/traefik
         - /etc/traefik/conf.d
         - /etc/traefik/ssl
+        - /etc/pocketid
+        - /etc/pocketid/data
 
-    - name: Install Service Files
+    - name: Install Traefik Service File
       ansible.builtin.template:
         src: files/traefik/traefik.service.j2
         dest: /etc/systemd/system/traefik.service
         mode: "644"
       notify: Restart Traefik
 
-    - name: Install Environment File
+    - name: Install Pocket ID Service File
       ansible.builtin.template:
-        src: files/traefik/env.j2
-        dest: /etc/traefik/env
+        src: files/traefik/pocketid.service.j2
+        dest: /etc/systemd/system/pocketid.service
         mode: "644"
-      notify: Restart Traefik
+      notify: Restart Pocket ID
 
     - name: Include Serivce Varaibles
       ansible.builtin.include_vars:
         file: services.index.yaml
         name: services
+
+    - name: Install Traefik Environment File
+      ansible.builtin.template:
+        src: files/traefik/traefik.env.j2
+        dest: /etc/traefik/env
+        mode: "644"
+      notify: Restart Traefik
+
+    - name: Install Pocket ID Environment file
+      ansible.builtin.template:
+        src: files/traefik/pocketid.env.j2
+        dest: /etc/pocketid/env
+        mode: "644"
 
     - name: Template Main Config
       ansible.builtin.template:
@@ -69,5 +92,11 @@
     - name: Restart Traefik
       ansible.builtin.service:
         name: traefik
+        state: restarted
+        enabled: true
+
+    - name: Restart Pocket ID
+      ansible.builtin.service:
+        name: pocketid
         state: restarted
         enabled: true

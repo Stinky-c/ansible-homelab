@@ -20,3 +20,15 @@
     [http.middlewares.pihole-redirect.redirectRegex]
         regex = "^https?://(.*\\.com)/?$"
         replacement = "https://${1}/admin"
+
+
+    # See docs for reference:
+    # https://traefik-oidc-auth.sevensolutions.cc/docs/identity-providers/pocket-id
+    [http.middlewares.oidc-auth.plugin.traefik-oidc-auth]
+        Scopes = [ "openid", "profile", "email", "groups" ]
+
+        [http.middlewares.oidc-auth.plugin.traefik-oidc-auth.Provider]
+            Url = "https://auth.{{ traefik_root_domain }}"
+            ClientId = "{{ pocketid_client_id }}"
+            ClientSecret = "{{ pocketid_client_secret }}"
+
