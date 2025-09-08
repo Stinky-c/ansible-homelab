@@ -1,0 +1,8 @@
+komodo_core_version: "1.19.3"
+komodo_mongo_version: "8.0"
+
+komodo_core_passkey: "{{ vault_komodo_core_passkey }}"
+
+komodo_api_url: "{{ vault_komodo_api_url }}"
+komodo_api_key: "{{ vault_komodo_api_key }}"
+komodo_api_secret: "{{ vault_komodo_api_secret }}"

@@ -1,8 +1,5 @@
-komodo_core_version: "1.19.0"
-
 komodo_core_webhook_secret: "{{ vault_komodo_core_webhook_secret }}"
 komodo_core_jwt_secret: "{{ vault_komodo_core_jwt_secret }}"
-komodo_core_passkey: "{{ vault_komodo_core_passkey }}"
 
 komodo_db_username: "admin"
 komodo_db_password: "{{ vault_komodo_db_password }}"

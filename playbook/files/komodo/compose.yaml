@@ -1,7 +1,8 @@
 # 🦎
 services:
   mongo:
-    image: mongo
+    image: mongo:${COMPOSE_MONGO_IMAGE_TAG:-latest}
+    container_name: komodo_mongo
     labels:
       komodo.skip: # Prevent Komodo from stopping with StopAllContainers
     command: --quiet --wiredTigerCacheSizeGB 0.25
@@ -12,9 +13,10 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${KOMODO_DB_USERNAME}
       MONGO_INITDB_ROOT_PASSWORD: ${KOMODO_DB_PASSWORD}
-  
+
   core:
     image: ghcr.io/moghtech/komodo-core:${COMPOSE_KOMODO_IMAGE_TAG:-latest}
+    container_name: komodo_core
     labels:
       komodo.skip: # Prevent Komodo from stopping with StopAllContainers
     restart: unless-stopped
@@ -31,10 +33,6 @@ services:
       - ${COMPOSE_KOMODO_BACKUPS_PATH}:/backups
       ## Store sync files on server
       # - /path/to/syncs:/syncs
-      ## Optionally mount a custom core.config.toml
-      # - /path/to/core.config.toml:/config/config.toml
-    ## Allows for systemd Periphery connection at 
-    ## "https://host.docker.internal:8120"
     extra_hosts:
       - host.docker.internal:host-gateway
 

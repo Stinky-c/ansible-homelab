@@ -1,11 +1,11 @@
 ---
 - name: Install Komodo server
-  hosts: komodo
-  become: true
+  hosts: komodo_core
   vars:
     TZ: "america/los_angeles" # noqa: var-naming[pattern]
     # Uses docker image tag
-    komodo_core_version: "{{ komodo_core_version }}"
+    docker_komodo_core_version: "{{ komodo_core_version }}"
+    docker_komodo_mongo_version: "{{ komodo_mongo_version }}"
 
   roles:
     - geerlingguy.docker
@@ -44,10 +44,6 @@
               - "komodo.env"
             state: present
           register: containers
-
-    # Need to start to define api keys
-    # - name: Install agents
-    #   ansible.builtin.import_playbook: komodo.periphery.yaml
 
   handlers:
     - name: Restart Komodo Core

@@ -102,6 +102,10 @@ local:
     rule: "Host(`immich.{{ traefik_local_domain }}`)"
     url: "http://192.168.0.11:2283"
     middlewares:
+  - service: komodo
+    rule: "Host(`komodo.{{ traefik_local_domain }}`)"
+    url: "http://192.168.1.135:9120"
+    middlewares:
 
 external:
   - service: jellyfin-external

@@ -1,9 +1,9 @@
 ---
 - name: Manage Komodo Periphery Service
-  hosts: komodo
+  hosts: komodo_host
   roles:
     - sysupgrade
-    # - geerlingguy.docker
+    - geerlingguy.docker
 
   tasks:
     - name: Install acl
@@ -16,4 +16,10 @@
         name: bpbradley.komodo
       vars:
         komodo_action: "install"
-        komodo_version: "latest"
+        komodo_version: "core"
+        enable_server_management: true
+        komodo_core_url: "{{ komodo_api_url }}"
+        komodo_core_api_key: "{{ komodo_api_key }}"
+        komodo_core_api_secret: "{{ komodo_api_secret }}"
+        komodo_passkeys:
+          - "{{ komodo_core_passkey }}"
