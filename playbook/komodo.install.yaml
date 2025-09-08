@@ -1,0 +1,60 @@
+---
+- name: Install Komodo server
+  hosts: komodo
+  become: true
+  vars:
+    TZ: "america/los_angeles" # noqa: var-naming[pattern]
+    # Uses docker image tag
+    komodo_core_version: 1.19.1
+
+  roles:
+    - geerlingguy.docker
+
+  tasks:
+    - name: Create directories
+      ansible.builtin.file:
+        path: "{{ item }}"
+        mode: "644"
+        state: directory
+      loop:
+        - "/opt/komodo"
+        - "/etc/komodo"
+
+    - name: Template compose
+      block:
+        - name: Template docker compose
+          ansible.builtin.template:
+            src: files/komodo/compose.yaml
+            dest: /opt/komodo/compose.yaml
+            mode: "644"
+          notify: Restart Komodo Core
+
+        - name: Template compose env
+          ansible.builtin.template:
+            src: files/komodo/komodo.env.j2
+            dest: /opt/komodo/komodo.env
+            mode: "644"
+          notify: Restart Komodo Core
+
+        # Handles starting and updating core
+        - name: Start Komodo Core
+          community.docker.docker_compose_v2:
+            project_src: "/opt/komodo"
+            env_files:
+              - "komodo.env"
+            state: present
+          register: containers
+
+    # Need to start to define api keys
+    # - name: Install agents
+    #   ansible.builtin.import_playbook: komodo.periphery.yaml
+
+  handlers:
+    - name: Restart Komodo Core
+      community.docker.docker_compose_v2:
+        project_src: "/opt/komodo"
+        env_files:
+          - "komodo.env"
+        state: restarted
+      # Don't run the handler if first start
+      when: "not containers.changed"

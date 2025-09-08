@@ -1,0 +1,15 @@
+[Unit]
+Description=Agent to connect with Komodo Core
+
+[Service]
+Environment=HOME=/opt/periphery
+ExecStart=/usr/local/bin/periphery --config-path /opt/periphery/config.toml
+Restart=on-failure
+TimeoutStartSec=0
+
+WorkingDirectory=/opt/periphery
+User=komodo
+Group=komodo
+
+[Install]
+WantedBy=default.target
