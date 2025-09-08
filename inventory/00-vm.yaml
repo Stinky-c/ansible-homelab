@@ -27,3 +27,7 @@ dumbdocker:
 metrics:
   hosts:
     metrics.host.buckydev.com:
+
+komodo:
+  hosts:
+    komodo.host.buckydev.com:

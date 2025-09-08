@@ -1,1 +1,2 @@
 prometheus_api_key: "{{ vault_prometheus_api_key }}"
+komodo_passkey: "{{ vault_komodo_passkey }}" # TODO: Find a better place

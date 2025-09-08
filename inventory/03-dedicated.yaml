@@ -3,3 +3,8 @@ pve:
   hosts:
     pve.host.buckydev.com:
       ansible_host: 192.168.0.189
+
+media:
+  hosts:
+    media.host.buckydev.com:
+      ansible_host: 192.168.0.11

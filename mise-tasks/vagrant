@@ -1,4 +1,5 @@
 #!/bin/bash
+#MISE alias="v"
 docker run -it --rm \
   -e LIBVIRT_DEFAULT_URI \
   -v /var/run/libvirt/:/var/run/libvirt/ \

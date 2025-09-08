@@ -1,0 +1,3 @@
+komodo_core_api_key: "{{ vault_komodo_core_api_key }}"
+komodo_core_api_secret: "{{ vault_komodo_core_api_secret }}"
+komodo_core_url: "{{vault_komodo_core_url }}"

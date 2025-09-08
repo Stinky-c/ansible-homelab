@@ -45,6 +45,11 @@ docker:
   children:
     dumbdocker:
 
+periphery:
+  children:
+    # media:
+    komodo:
+
 all:
   vars:
     ansible_python_interpreter: /usr/bin/python3
@@ -54,6 +59,7 @@ vagrant:
     karakeep:
     metrics:
     copyparty:
+    komodo:
   vars:
     ansible_host: 192.168.121.10
     ansible_ssh_private_key_file: .vagrant/machines/default/libvirt/private_key
