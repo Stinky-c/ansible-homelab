@@ -1,82 +1,19 @@
 ---
-- name: Install Komodo Periphery Agent
+- name: Manage Komodo Periphery Service
   hosts: komodo
   roles:
     - sysupgrade
-    - geerlingguy.docker
-    - role: bpbradley.komodo
-      komodo_action: install
-      # komodo_version: "1.19.1"
-      komodo_version: "core"
+    # - geerlingguy.docker
 
-      # Expected:
-      komodo_passkeys:
-        - "{{ komodo_core_passkey }}"
-      komodo_core_api_key: "K-QIAFHhNm07ePqVEhu9LLYhBb6XaSM1cAeapLcfUt"
-      komodo_core_api_secret: "S-SHZnTLlrYq9MOkKQIVR5biweH2Ry9oT7hg6Nkgwa"
-      komodo_core_url: "http://localhost:9120"
-
-  vars:
-    komodo_action: install
-    komodo_version: "1.19.1" # grab api to find version
-
-    # Expected:
-    komodo_passkeys:
-      - "{{ komodo_core_passkey }}"
-    komodo_core_api_key: "K-QIAFHhNm07ePqVEhu9LLYhBb6XaSM1cAeapLcfUt"
-    komodo_core_api_secret: "S-SHZnTLlrYq9MOkKQIVR5biweH2Ry9oT7hg6Nkgwa"
-    komodo_core_url: "http://localhost:9120"
-
-    app_arch: "x86_64"
   tasks:
-    - name: Fail
-      ansible.builtin.fail:
-        msg: grrr
-    - name: Download Binary
-      ansible.builtin.get_url:
-        url: "https://github.com/moghtech/komodo/releases/download/v{{ komodo_version }}/periphery-{{ app_arch }}"
-        dest: "/usr/local/bin/periphery"
-        mode: "755"
-      notify: Restart Periphery
-
-    - name: Create komodo group
-      ansible.builtin.group:
-        name: komodo
+    - name: Install acl
+      ansible.builtin.apt:
+        name: acl
         state: present
 
-    - name: Create komodo user
-      ansible.builtin.user:
-        name: komodo
-        group: komodo
-        groups:
-          - docker
-        home: /opt/periphery
-        shell: /sbin/nologin
-        state: present
-        create_home: true
-        password_lock: true
-
-    - name: Template service
-      ansible.builtin.template:
-        src: files/periphery/periphery.service.j2
-        dest: /etc/systemd/system/periphery.service
-        mode: "644"
-      register: service
-      notify: Restart Periphery
-
-    - name: Template config
-      ansible.builtin.template:
-        src: files/periphery/config.toml.j2
-        dest: /opt/periphery/config.toml
-        mode: "600"
-        owner: komodo
-        group: komodo
-      notify: Restart Periphery
-
-  handlers:
-    - name: Restart Periphery
-      ansible.builtin.systemd_service:
-        name: periphery.service
-        state: restarted
-        daemon_reload: "{{ service.changed | bool }}"
-        enabled: true
+    - name: Run role
+      ansible.builtin.include_role:
+        name: bpbradley.komodo
+      vars:
+        komodo_action: "install"
+        komodo_version: "latest"

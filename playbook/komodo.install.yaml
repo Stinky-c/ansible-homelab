@@ -5,7 +5,7 @@
   vars:
     TZ: "america/los_angeles" # noqa: var-naming[pattern]
     # Uses docker image tag
-    komodo_core_version: 1.19.1
+    komodo_core_version: "{{ komodo_core_version }}"
 
   roles:
     - geerlingguy.docker
