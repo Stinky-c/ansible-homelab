@@ -18,7 +18,6 @@
         state: directory
       loop:
         - "/opt/komodo"
-        - "/etc/komodo"
 
     - name: Template compose
       block:

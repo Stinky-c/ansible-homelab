@@ -9,4 +9,4 @@ roles:
   - name: geerlingguy.docker
     version: 7.5.3
   - name: bpbradley.komodo
-    version: abc90201b3127aff7eae8866281fd9be1ae8591f
+    version: 0d24117d0d4a1a3e2f4caf445ee3c31e9e6c2095
