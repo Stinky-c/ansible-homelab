@@ -102,9 +102,15 @@ local:
     rule: "Host(`immich.{{ traefik_local_domain }}`)"
     url: "http://192.168.0.11:2283"
     middlewares:
+  
   - service: komodo
     rule: "Host(`komodo.{{ traefik_local_domain }}`)"
     url: "http://192.168.1.135:9120"
+    middlewares:
+
+  - service: n8n
+    rule: "Host(`n8n.{{ traefik_local_domain }}`)"
+    url: "http://192.168.1.135:5678"
     middlewares:
 
 external:
@@ -113,3 +119,8 @@ external:
     url: "http://192.168.0.11:8096" # Public jellyfin port = 8196; unused due to issues
     middlewares:
       - jellyfin-mw
+
+  - service: soft-serve
+    rule: "Host(`soft.{{ traefik_root_domain }}`)"
+    url: "http://192.168.1.18:23232"
+    middlewares:
