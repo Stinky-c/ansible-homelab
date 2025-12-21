@@ -113,6 +113,11 @@ local:
     url: "http://192.168.1.135:5678"
     middlewares:
 
+  - service: excalidash
+    rule: "Host(`excalidash.{{ traefik_local_domain }}`)"
+    url: "http://192.168.1.135:4000"
+    middlewares:
+
 external:
   - service: jellyfin-external
     rule: "Host(`watch.{{ traefik_root_domain }}`)"
