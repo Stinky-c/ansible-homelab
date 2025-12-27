@@ -118,6 +118,11 @@ local:
     url: "http://192.168.1.135:4000"
     middlewares:
 
+  - service: excalidash
+    rule: "Host(`booklore.{{ traefik_local_domain }}`)"
+    url: "http://192.168.0.11:6060"
+    middlewares:
+
 external:
   - service: jellyfin-external
     rule: "Host(`watch.{{ traefik_root_domain }}`)"
@@ -128,4 +133,9 @@ external:
   - service: soft-serve
     rule: "Host(`soft.{{ traefik_root_domain }}`)"
     url: "http://192.168.1.18:23232"
+    middlewares:
+
+  - service: soft-serve
+    rule: "Host(`books.{{ traefik_root_domain }}`)"
+    url: "http://192.168.0.11:6060"
     middlewares:
