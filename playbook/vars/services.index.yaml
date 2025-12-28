@@ -118,7 +118,7 @@ local:
     url: "http://192.168.1.135:4000"
     middlewares:
 
-  - service: excalidash
+  - service: booklore
     rule: "Host(`booklore.{{ traefik_local_domain }}`)"
     url: "http://192.168.0.11:6060"
     middlewares:
@@ -135,7 +135,7 @@ external:
     url: "http://192.168.1.18:23232"
     middlewares:
 
-  - service: soft-serve
+  - service: books
     rule: "Host(`books.{{ traefik_root_domain }}`)"
     url: "http://192.168.0.11:6060"
     middlewares:
