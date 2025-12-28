@@ -123,6 +123,11 @@ local:
     url: "http://192.168.0.11:6060"
     middlewares:
 
+  - service: vaultwarden
+    rule: "Host(`vaultwarden.{{ traefik_local_domain }}`)"
+    url: "http://192.168.1.135:8800"
+    middlewares:
+
 external:
   - service: jellyfin-external
     rule: "Host(`watch.{{ traefik_root_domain }}`)"
